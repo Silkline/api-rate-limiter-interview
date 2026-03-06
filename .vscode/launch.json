@@ -22,11 +22,12 @@
     },
     {
       "name": "Run Go tests",
-      "type": "go",
+      "type": "node",
       "request": "launch",
-      "mode": "test",
-      "cwd": "${workspaceFolder}/go",
-      "program": "${workspaceFolder}/go"
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["${workspaceFolder}/scripts/run-go-tests.sh"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
     },
     {
       "name": "Run Python tests",
@@ -41,18 +42,18 @@
       "name": "Run Java tests",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "mvn",
-      "runtimeArgs": ["test", "-q"],
-      "cwd": "${workspaceFolder}/java",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["${workspaceFolder}/scripts/run-java-tests.sh"],
+      "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
     {
       "name": "Run C# tests",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "dotnet",
-      "runtimeArgs": ["test", "${workspaceFolder}/csharp/ApiRateLimiter.csproj", "--logger", "console;verbosity=normal"],
-      "cwd": "${workspaceFolder}/csharp",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["${workspaceFolder}/scripts/run-csharp-tests.sh"],
+      "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     }
   ]

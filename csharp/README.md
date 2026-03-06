@@ -5,7 +5,7 @@ C# implementation of the API rate limiter. See [SPEC.md](../SPEC.md) for the ful
 ## Setup (VS Code / GitHub Codespaces)
 
 1. Open this folder in VS Code (or open the repo in [GitHub Codespaces](https://github.com/features/codespaces)).
-2. Ensure .NET 8 SDK is installed (`dotnet --version`).
+2. Ensure .NET 10 SDK is installed (`dotnet --version`).
 3. Restore packages (optional; `dotnet test` will restore):
 
    ```bash

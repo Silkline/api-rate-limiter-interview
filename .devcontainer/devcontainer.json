@@ -6,7 +6,7 @@
     "ghcr.io/devcontainers/features/go:1": { "version": "1.21" },
     "ghcr.io/devcontainers/features/python:1": { "version": "3.11" },
     "ghcr.io/devcontainers/features/java:1": { "version": "17", "installMaven": "true" },
-    "ghcr.io/devcontainers/features/dotnet:2": { "version": "8.0" }
+    "ghcr.io/devcontainers/features/dotnet:2": { "version": "10.0" }
   },
   "postCreateCommand": "bash scripts/install.sh all || true",
   "customizations": {
