@@ -1,0 +1,57 @@
+# TypeScript / Node
+node_modules/
+npm-debug.log*
+dist/
+*.tsbuildinfo
+.npm
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+/go/bin/
+/go/pkg/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+*.egg
+
+# Java
+target/
+*.class
+*.jar
+*.war
+.mvn/wrapper/maven-wrapper.jar
+
+# C#
+bin/
+obj/
+*.user
+*.suo
+*.cache
+project.lock.json
+*.dll
+*.pdb
+*.exe
+
+# IDE / OS
+.idea/
+*.iml
+.vscode/*.log
+.DS_Store
+Thumbs.db
+
+# Misc
+*.log
+.env
+.env.local

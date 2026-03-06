@@ -1,0 +1,9 @@
+[project]
+name = "api-rate-limiter-python"
+version = "1.0.0"
+description = "API rate limiter interview - Python"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+testpaths = ["."]
+python_files = ["test_*.py"]

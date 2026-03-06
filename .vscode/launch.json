@@ -1,0 +1,59 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run TypeScript tests",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "test"],
+      "cwd": "${workspaceFolder}/typescript",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Debug TypeScript tests (Vitest)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "test", "--", "--inspect-brk"],
+      "cwd": "${workspaceFolder}/typescript",
+      "console": "integratedTerminal",
+      "outputCapture": "std"
+    },
+    {
+      "name": "Run Go tests",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "cwd": "${workspaceFolder}/go",
+      "program": "${workspaceFolder}/go"
+    },
+    {
+      "name": "Run Python tests",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["-v"],
+      "cwd": "${workspaceFolder}/python",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Run Java tests",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "mvn",
+      "runtimeArgs": ["test", "-q"],
+      "cwd": "${workspaceFolder}/java",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Run C# tests",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["test", "${workspaceFolder}/csharp/ApiRateLimiter.csproj", "--logger", "console;verbosity=normal"],
+      "cwd": "${workspaceFolder}/csharp",
+      "console": "integratedTerminal"
+    }
+  ]
+}

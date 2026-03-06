@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "golang.go",
+    "ms-python.python",
+    "ms-python.debugpy",
+    "vscjava.vscode-java-pack",
+    "ms-dotnettools.csharp",
+    "vitest.explorer"
+  ]
+}

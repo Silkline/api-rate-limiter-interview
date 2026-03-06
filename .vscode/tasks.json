@@ -1,0 +1,58 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Tests: TypeScript",
+      "type": "shell",
+      "command": "npm test",
+      "options": { "cwd": "${workspaceFolder}/typescript", "env": {} },
+      "group": { "kind": "test", "isDefault": false },
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Tests: Go",
+      "type": "shell",
+      "command": "go test -v -timeout=15s",
+      "options": { "cwd": "${workspaceFolder}/go" },
+      "group": { "kind": "test", "isDefault": false },
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Tests: Python",
+      "type": "shell",
+      "command": "pytest -v",
+      "options": { "cwd": "${workspaceFolder}/python" },
+      "group": { "kind": "test", "isDefault": false },
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Tests: Java",
+      "type": "shell",
+      "command": "mvn test -q",
+      "options": { "cwd": "${workspaceFolder}/java" },
+      "group": { "kind": "test", "isDefault": false },
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Tests: C#",
+      "type": "shell",
+      "command": "dotnet test",
+      "options": { "cwd": "${workspaceFolder}/csharp" },
+      "group": { "kind": "test", "isDefault": false },
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
+      "label": "Tests: All",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Tests: TypeScript",
+        "Tests: Go",
+        "Tests: Python",
+        "Tests: Java",
+        "Tests: C#"
+      ],
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": []
+    }
+  ]
+}
