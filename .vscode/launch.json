@@ -55,6 +55,24 @@
       "runtimeArgs": ["${workspaceFolder}/scripts/run-csharp-tests.sh"],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
+    },
+    {
+      "name": "Run Rust tests",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["${workspaceFolder}/scripts/run-rust-tests.sh"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Run Ruby tests",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["${workspaceFolder}/scripts/run-ruby-tests.sh"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
     }
   ]
 }

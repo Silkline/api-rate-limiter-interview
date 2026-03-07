@@ -1,0 +1,8 @@
+[package]
+name = "rate_limiter"
+version = "0.1.0"
+edition = "2021"
+description = "API rate limiter: free = 5 requests ever, paid = 2 per 5s window"
+
+[lib]
+path = "src/lib.rs"

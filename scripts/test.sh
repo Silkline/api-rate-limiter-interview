@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Run tests for one language or all. Run from repo root.
-# Usage: ./scripts/test.sh [typescript|go|python|java|csharp|all]
+# Usage: ./scripts/test.sh [typescript|go|python|java|csharp|rust|ruby|all]
 
 set -e
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -37,15 +37,27 @@ run_csharp() {
   (cd csharp && dotnet test --no-restore 2>/dev/null || dotnet test)
 }
 
+run_rust() {
+  echo "Running Rust tests..."
+  (cd rust && cargo test -- --test-threads=1)
+}
+
+run_ruby() {
+  echo "Running Ruby tests..."
+  (cd ruby && bundle exec ruby -Ilib:test test/rate_limiter_test.rb)
+}
+
 case "$LANG" in
   typescript) run_typescript ;;
   go)         run_go ;;
   python)     run_python ;;
   java)       run_java ;;
   csharp)     run_csharp ;;
+  rust)       run_rust ;;
+  ruby)       run_ruby ;;
   all)
     FAILED=""
-    for lang in typescript go python java csharp; do
+    for lang in typescript go python java csharp rust ruby; do
       echo "========== $lang =========="
       if ! "run_$lang"; then
         FAILED="$FAILED $lang"
@@ -58,7 +70,7 @@ case "$LANG" in
     fi
     ;;
   *)
-    echo "Usage: $0 [typescript|go|python|java|csharp|all]"
+    echo "Usage: $0 [typescript|go|python|java|csharp|rust|ruby|all]"
     exit 1
     ;;
 esac

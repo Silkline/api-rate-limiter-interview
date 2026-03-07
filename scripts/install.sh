@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Install dependencies for one language or all. Run from repo root.
-# Usage: ./scripts/install.sh [typescript|go|python|java|csharp|all]
+# Usage: ./scripts/install.sh [typescript|go|python|java|csharp|rust|ruby|all]
 
 set -e
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -57,20 +57,40 @@ install_csharp() {
   (cd csharp && dotnet restore -q)
 }
 
+install_rust() {
+  if ! command -v cargo &>/dev/null; then
+    echo "Rust/Cargo not found. Install from https://rustup.rs/."
+    return 1
+  fi
+  echo "Rust: no external deps (stdlib only). Fetching..."
+  (cd rust && cargo fetch 2>/dev/null || cargo build --release 2>/dev/null || true)
+}
+
+install_ruby() {
+  if ! command -v ruby &>/dev/null; then
+    echo "Ruby not found. Install from https://www.ruby-lang.org/."
+    return 1
+  fi
+  echo "Installing Ruby dependencies..."
+  (cd ruby && bundle install 2>/dev/null || true)
+}
+
 case "$LANG" in
   typescript) install_typescript ;;
   go)         install_go ;;
   python)     install_python ;;
   java)       install_java ;;
   csharp)     install_csharp ;;
+  rust)       install_rust ;;
+  ruby)       install_ruby ;;
   all)
-    for lang in typescript go python java csharp; do
+    for lang in typescript go python java csharp rust ruby; do
       echo "--- $lang ---"
       "install_$lang" || true
     done
     ;;
   *)
-    echo "Usage: $0 [typescript|go|python|java|csharp|all]"
+    echo "Usage: $0 [typescript|go|python|java|csharp|rust|ruby|all]"
     exit 1
     ;;
 esac

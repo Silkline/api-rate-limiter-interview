@@ -44,6 +44,15 @@ project.lock.json
 *.pdb
 *.exe
 
+# Rust
+rust/target/
+
+# Ruby
+vendor/bundle/
+.bundle/
+*.gem
+*.rbc
+
 # IDE / OS
 .idea/
 *.iml

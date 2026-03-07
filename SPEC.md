@@ -64,3 +64,5 @@ Step-by-step instructions for agents and maintainers:
 | Python     | `def rate_limiter(user_id: str) -> bool` | pytest                       |
 | Java       | `boolean rateLimiter(String userId)`     | JUnit 5 (Maven or Gradle)     |
 | C#         | `bool RateLimiter(string userId)`        | xUnit or NUnit (dotnet test) |
+| Rust       | `fn rate_limiter(user_id: &str) -> bool`  | `cargo test`                 |
+| Ruby       | `def rate_limiter(user_id)`              | Minitest (ruby / bundle exec) |

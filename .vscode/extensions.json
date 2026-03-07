@@ -7,6 +7,8 @@
     "ms-python.debugpy",
     "vscjava.vscode-java-pack",
     "ms-dotnettools.csharp",
-    "vitest.explorer"
+    "vitest.explorer",
+    "rust-lang.rust-analyzer",
+    "rebornix.ruby"
   ]
 }
