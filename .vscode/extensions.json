@@ -1,5 +1,6 @@
 {
   "recommendations": [
+    "MS-vsliveshare.vsliveshare",
     "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
     "golang.go",

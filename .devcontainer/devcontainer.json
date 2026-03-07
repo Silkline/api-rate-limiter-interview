@@ -8,12 +8,12 @@
     "ghcr.io/devcontainers/features/java:1": { "version": "17", "installMaven": "true" },
     "ghcr.io/devcontainers/features/dotnet:2": { "version": "10.0" },
     "ghcr.io/devcontainers/features/rust:1": {},
-    "ghcr.io/devcontainers/features/ruby:1": { "version": "3" }
   },
   "postCreateCommand": "bash scripts/install.sh all || true",
   "customizations": {
     "vscode": {
       "extensions": [
+        "MS-vsliveshare.vsliveshare",
         "dbaeumer.vscode-eslint",
         "golang.go",
         "ms-python.python",
@@ -22,7 +22,6 @@
         "ms-dotnettools.csharp",
         "vitest.explorer",
         "rust-lang.rust-analyzer",
-        "rebornix.ruby"
       ]
     }
   },
