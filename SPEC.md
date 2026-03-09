@@ -55,6 +55,8 @@ Step-by-step instructions for agents and maintainers:
 
 8. **Update root [README.md](README.md)** to link the new folder. Optionally add the language to the "Languages" table in this SPEC for consistency.
 
+9. **VS Code extensions:** Add the language's VS Code extension to both [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json) (`customizations.vscode.extensions`) and [.vscode/extensions.json](.vscode/extensions.json) (`recommendations`) so the two lists stay identical. The dev container list auto-installs in Codespaces/Reopen in Container; the workspace recommendations prompt local users to install.
+
 ### Per-language outline (reference)
 
 | Language   | Function signature (conceptual)          | Test runner / framework      |

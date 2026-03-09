@@ -15,6 +15,7 @@
       "extensions": [
         "MS-vsliveshare.vsliveshare",
         "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
         "golang.go",
         "ms-python.python",
         "ms-python.debugpy",
@@ -22,6 +23,7 @@
         "ms-dotnettools.csharp",
         "vitest.explorer",
         "rust-lang.rust-analyzer",
+        "rebornix.ruby",
         "fwcd.kotlin"
       ]
     }
