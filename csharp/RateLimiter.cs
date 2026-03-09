@@ -12,40 +12,13 @@ public static class RateLimiter
     /// </summary>
     public static readonly ConcurrentDictionary<string, UserTier> UserTiers = new();
 
-    private static readonly ConcurrentDictionary<string, List<long>> RequestTimestamps = new();
-
-    private static UserTier GetTier(string userId)
-    {
-        return UserTiers.TryGetValue(userId, out var tier) ? tier : UserTier.Free;
-    }
-
     /// <summary>
     /// Returns true if the request is allowed, false if rate limited.
+    /// TODO: Implement per SPEC — free = lifetime cap, paid = per-window limit.
     /// </summary>
     public static bool AllowRequest(string userId)
     {
-        var tier = GetTier(userId);
-        var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        var windowMs = Constants.WindowSeconds * 1000L;
-        var cutoff = now - windowMs;
-
-        var timestamps = RequestTimestamps.GetOrAdd(userId, _ => new List<long>());
-        lock (timestamps)
-        {
-            if (tier == UserTier.Free)
-            {
-                if (timestamps.Count >= Constants.FreeLimit)
-                    return false;
-                timestamps.Add(now);
-                return true;
-            }
-
-            // Paid: only count requests in current window
-            var inWindow = timestamps.Count(t => t > cutoff);
-            if (inWindow >= Constants.PaidLimit)
-                return false;
-            timestamps.Add(now);
-            return true;
-        }
+        // Stub: replace with your implementation
+        return false;
     }
 }
