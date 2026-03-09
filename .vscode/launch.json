@@ -73,6 +73,15 @@
       "runtimeArgs": ["${workspaceFolder}/scripts/run-ruby-tests.sh"],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
+    },
+    {
+      "name": "Run Kotlin tests",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["${workspaceFolder}/scripts/run-kotlin-tests.sh"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal"
     }
   ]
 }

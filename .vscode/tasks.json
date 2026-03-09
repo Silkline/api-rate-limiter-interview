@@ -58,6 +58,14 @@
       "presentation": { "reveal": "always", "panel": "shared" }
     },
     {
+      "label": "Tests: Kotlin",
+      "type": "shell",
+      "command": "./gradlew test --no-daemon",
+      "options": { "cwd": "${workspaceFolder}/kotlin" },
+      "group": { "kind": "test", "isDefault": false },
+      "presentation": { "reveal": "always", "panel": "shared" }
+    },
+    {
       "label": "Tests: All",
       "dependsOrder": "sequence",
       "dependsOn": [
@@ -67,7 +75,8 @@
         "Tests: Java",
         "Tests: C#",
         "Tests: Rust",
-        "Tests: Ruby"
+        "Tests: Ruby",
+        "Tests: Kotlin"
       ],
       "group": { "kind": "test", "isDefault": true },
       "problemMatcher": []

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Run tests for one language or all. Run from repo root.
-# Usage: ./scripts/test.sh [typescript|go|python|java|csharp|rust|ruby|all]
+# Usage: ./scripts/test.sh [typescript|go|python|java|csharp|rust|ruby|kotlin|all]
 
 set -e
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -47,6 +47,11 @@ run_ruby() {
   (cd ruby && bundle exec ruby -Ilib:test test/rate_limiter_test.rb)
 }
 
+run_kotlin() {
+  echo "Running Kotlin tests..."
+  (cd kotlin && ./gradlew test --no-daemon -q)
+}
+
 case "$LANG" in
   typescript) run_typescript ;;
   go)         run_go ;;
@@ -55,9 +60,10 @@ case "$LANG" in
   csharp)     run_csharp ;;
   rust)       run_rust ;;
   ruby)       run_ruby ;;
+  kotlin)     run_kotlin ;;
   all)
     FAILED=""
-    for lang in typescript go python java csharp rust ruby; do
+    for lang in typescript go python java csharp rust ruby kotlin; do
       echo "========== $lang =========="
       if ! "run_$lang"; then
         FAILED="$FAILED $lang"
@@ -70,7 +76,7 @@ case "$LANG" in
     fi
     ;;
   *)
-    echo "Usage: $0 [typescript|go|python|java|csharp|rust|ruby|all]"
+    echo "Usage: $0 [typescript|go|python|java|csharp|rust|ruby|kotlin|all]"
     exit 1
     ;;
 esac

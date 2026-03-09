@@ -66,3 +66,4 @@ Step-by-step instructions for agents and maintainers:
 | C#         | `bool RateLimiter(string userId)`        | xUnit or NUnit (dotnet test) |
 | Rust       | `fn rate_limiter(user_id: &str) -> bool`  | `cargo test`                 |
 | Ruby       | `def rate_limiter(user_id)`              | Minitest (ruby / bundle exec) |
+| Kotlin     | `fun rateLimiter(userId: String): Boolean` | JUnit 5 (Gradle)              |

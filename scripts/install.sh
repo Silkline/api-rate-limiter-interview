@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Install dependencies for one language or all. Run from repo root.
-# Usage: ./scripts/install.sh [typescript|go|python|java|csharp|rust|ruby|all]
+# Usage: ./scripts/install.sh [typescript|go|python|java|csharp|rust|ruby|kotlin|all]
 
 set -e
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -75,6 +75,15 @@ install_ruby() {
   (cd ruby && bundle install 2>/dev/null || true)
 }
 
+install_kotlin() {
+  if ! command -v java &>/dev/null; then
+    echo "Java (JDK) not found. Install from https://adoptium.net/ or use SDKMAN."
+    return 1
+  fi
+  echo "Installing Kotlin dependencies (Gradle)..."
+  (cd kotlin && ./gradlew dependencies --no-daemon -q 2>/dev/null || ./gradlew build -x test --no-daemon -q 2>/dev/null || true)
+}
+
 case "$LANG" in
   typescript) install_typescript ;;
   go)         install_go ;;
@@ -83,14 +92,15 @@ case "$LANG" in
   csharp)     install_csharp ;;
   rust)       install_rust ;;
   ruby)       install_ruby ;;
+  kotlin)     install_kotlin ;;
   all)
-    for lang in typescript go python java csharp rust ruby; do
+    for lang in typescript go python java csharp rust ruby kotlin; do
       echo "--- $lang ---"
       "install_$lang" || true
     done
     ;;
   *)
-    echo "Usage: $0 [typescript|go|python|java|csharp|rust|ruby|all]"
+    echo "Usage: $0 [typescript|go|python|java|csharp|rust|ruby|kotlin|all]"
     exit 1
     ;;
 esac

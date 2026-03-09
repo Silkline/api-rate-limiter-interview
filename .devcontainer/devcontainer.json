@@ -22,6 +22,7 @@
         "ms-dotnettools.csharp",
         "vitest.explorer",
         "rust-lang.rust-analyzer",
+        "fwcd.kotlin"
       ]
     }
   },

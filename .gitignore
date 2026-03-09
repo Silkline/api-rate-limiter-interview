@@ -53,6 +53,10 @@ vendor/bundle/
 *.gem
 *.rbc
 
+# Kotlin / Gradle
+kotlin/build/
+kotlin/.gradle/
+
 # IDE / OS
 .idea/
 *.iml

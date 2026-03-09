@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [typescript, go, python, java, csharp, rust, ruby]
+        language: [typescript, go, python, java, csharp, rust, ruby, kotlin]
 
     steps:
       - uses: actions/checkout@v4
@@ -39,12 +39,13 @@ jobs:
           python-version: "3.11"
 
       - name: Set up Java
-        if: matrix.language == 'java'
+        if: matrix.language == 'java' || matrix.language == 'kotlin'
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "17"
-          cache: "maven"
+          cache: ${{ matrix.language == 'java' && 'maven' || 'gradle' }}
+          cache-dependency-path: ${{ matrix.language == 'java' && 'java/pom.xml' || 'kotlin/build.gradle.kts' }}
 
       - name: Set up .NET
         if: matrix.language == 'csharp'
