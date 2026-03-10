@@ -48,6 +48,45 @@ class RateLimiterTest < Minitest::Test
     refute rate_limiter(user), "expected false"
   end
 
+  def test_isolation_between_users
+    user_a = "free-isolation-a"
+    user_b = "free-isolation-b"
+    USER_TIERS[user_a] = "free"
+    USER_TIERS[user_b] = "free"
+
+    3.times { rate_limiter(user_a) }
+    FREE_LIMIT.times { assert rate_limiter(user_b) }
+    refute rate_limiter(user_b)
+  end
+
+  def test_paid_single_request_then_window_expiry
+    user = "paid-single-window"
+    USER_TIERS[user] = "paid"
+
+    assert rate_limiter(user)
+    sleep WINDOW_SECONDS + 0.5
+    assert rate_limiter(user)
+    assert rate_limiter(user)
+    refute rate_limiter(user)
+  end
+
+  def test_paid_two_full_windows
+    user = "paid-two-windows"
+    USER_TIERS[user] = "paid"
+
+    assert rate_limiter(user)
+    assert rate_limiter(user)
+    refute rate_limiter(user)
+    sleep WINDOW_SECONDS + 0.5
+    assert rate_limiter(user)
+    assert rate_limiter(user)
+    refute rate_limiter(user)
+    sleep WINDOW_SECONDS + 0.5
+    assert rate_limiter(user)
+    assert rate_limiter(user)
+    refute rate_limiter(user)
+  end
+
   # --- EXTRA CREDIT: Free user upgrades to paid ---
   # After upgrade, paid rules apply and past requests (made when free) must count
   # toward the paid 2-per-window limit, so the user does NOT get a fresh paid window.
@@ -68,5 +107,19 @@ class RateLimiterTest < Minitest::Test
     assert rate_limiter(user), "expected true after window"
     assert rate_limiter(user), "expected true"
     refute rate_limiter(user), "expected false"
+  end
+
+  # --- EXTRA CREDIT: Constants respected (change FREE_LIMIT in test and things still work) ---
+  def test_extra_credit_constants_respected
+    orig = FREE_LIMIT
+    Object.send(:remove_const, :FREE_LIMIT)
+    Object.const_set(:FREE_LIMIT, 2)
+    user = "free-constants-check"
+    USER_TIERS[user] = "free"
+    2.times { assert rate_limiter(user) }
+    refute rate_limiter(user)
+  ensure
+    Object.send(:remove_const, :FREE_LIMIT)
+    Object.const_set(:FREE_LIMIT, orig)
   end
 end

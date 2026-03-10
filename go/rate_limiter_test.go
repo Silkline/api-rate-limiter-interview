@@ -89,6 +89,88 @@ func TestRateLimiter_PaidUser_AllowsAgainAfterWindow(t *testing.T) {
 	}
 }
 
+func TestRateLimiter_IsolationBetweenUsers(t *testing.T) {
+	clearUserTiers()
+	userA := "free-isolation-a"
+	userB := "free-isolation-b"
+	UserTiers[userA] = Free
+	UserTiers[userB] = Free
+
+	// User A uses 3 requests; user B should still get FREE_LIMIT allowed
+	for i := 0; i < 3; i++ {
+		if !RateLimiter(userA) {
+			t.Fatalf("user A request %d: expected true", i+1)
+		}
+	}
+	for i := 0; i < FREE_LIMIT; i++ {
+		if !RateLimiter(userB) {
+			t.Fatalf("user B request %d: expected true", i+1)
+		}
+	}
+	if RateLimiter(userB) {
+		t.Fatal("user B: expected false after FREE_LIMIT")
+	}
+}
+
+func TestRateLimiter_PaidUser_SingleRequestThenWindowExpiry(t *testing.T) {
+	clearUserTiers()
+	user := "paid-single-window"
+	UserTiers[user] = Paid
+
+	if !RateLimiter(user) {
+		t.Fatal("first request expected true")
+	}
+	time.Sleep(time.Duration(WINDOW_SECONDS+1) * time.Second)
+	if !RateLimiter(user) {
+		t.Fatal("after window: first request expected true")
+	}
+	if !RateLimiter(user) {
+		t.Fatal("after window: second request expected true")
+	}
+	if RateLimiter(user) {
+		t.Fatal("after window: third request expected false")
+	}
+}
+
+func TestRateLimiter_PaidUser_TwoFullWindows(t *testing.T) {
+	clearUserTiers()
+	user := "paid-two-windows"
+	UserTiers[user] = Paid
+
+	// Window 1: 2 allowed, then denied
+	if !RateLimiter(user) {
+		t.Fatal("w1: first expected true")
+	}
+	if !RateLimiter(user) {
+		t.Fatal("w1: second expected true")
+	}
+	if RateLimiter(user) {
+		t.Fatal("w1: third expected false")
+	}
+	time.Sleep(time.Duration(WINDOW_SECONDS+1) * time.Second)
+	// Window 2: 2 allowed, then denied
+	if !RateLimiter(user) {
+		t.Fatal("w2: first expected true")
+	}
+	if !RateLimiter(user) {
+		t.Fatal("w2: second expected true")
+	}
+	if RateLimiter(user) {
+		t.Fatal("w2: third expected false")
+	}
+	time.Sleep(time.Duration(WINDOW_SECONDS+1) * time.Second)
+	// Window 3: 2 allowed, then denied
+	if !RateLimiter(user) {
+		t.Fatal("w3: first expected true")
+	}
+	if !RateLimiter(user) {
+		t.Fatal("w3: second expected true")
+	}
+	if RateLimiter(user) {
+		t.Fatal("w3: third expected false")
+	}
+}
+
 // TestRateLimiter_ExtraCredit_FreeUpgradesToPaid is EXTRA CREDIT.
 // After upgrade, paid rules apply and past requests (made when free) must count
 // toward the paid 2-per-window limit, so the user does NOT get a fresh paid window.

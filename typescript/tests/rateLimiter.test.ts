@@ -56,6 +56,49 @@ describe('rateLimiter', () => {
       expect(rateLimiter(user)).toBe(true);
       expect(rateLimiter(user)).toBe(false);
     }, (WINDOW_SECONDS + 2) * 1000);
+
+    it('isolation between users: limits are per user', () => {
+      const userA = 'free-isolation-a';
+      const userB = 'free-isolation-b';
+      userTiers.set(userA, 'free');
+      userTiers.set(userB, 'free');
+
+      for (let i = 0; i < 3; i++) {
+        expect(rateLimiter(userA)).toBe(true);
+      }
+      for (let i = 0; i < FREE_LIMIT; i++) {
+        expect(rateLimiter(userB)).toBe(true);
+      }
+      expect(rateLimiter(userB)).toBe(false);
+    });
+
+    it('paid: single request then window expiry allows PAID_LIMIT after wait', async () => {
+      const user = 'paid-single-window';
+      userTiers.set(user, 'paid');
+
+      expect(rateLimiter(user)).toBe(true);
+      await new Promise((r) => setTimeout(r, (WINDOW_SECONDS + 0.5) * 1000));
+      expect(rateLimiter(user)).toBe(true);
+      expect(rateLimiter(user)).toBe(true);
+      expect(rateLimiter(user)).toBe(false);
+    }, (WINDOW_SECONDS + 2) * 1000);
+
+    it('paid: two full windows reset correctly', async () => {
+      const user = 'paid-two-windows';
+      userTiers.set(user, 'paid');
+
+      expect(rateLimiter(user)).toBe(true);
+      expect(rateLimiter(user)).toBe(true);
+      expect(rateLimiter(user)).toBe(false);
+      await new Promise((r) => setTimeout(r, (WINDOW_SECONDS + 0.5) * 1000));
+      expect(rateLimiter(user)).toBe(true);
+      expect(rateLimiter(user)).toBe(true);
+      expect(rateLimiter(user)).toBe(false);
+      await new Promise((r) => setTimeout(r, (WINDOW_SECONDS + 0.5) * 1000);
+      expect(rateLimiter(user)).toBe(true);
+      expect(rateLimiter(user)).toBe(true);
+      expect(rateLimiter(user)).toBe(false);
+    }, (WINDOW_SECONDS + 2) * 3000);
   });
 
   /**
@@ -84,5 +127,21 @@ describe('rateLimiter', () => {
       expect(rateLimiter(user)).toBe(true);
       expect(rateLimiter(user)).toBe(false);
     }, (WINDOW_SECONDS + 2) * 1000);
+  });
+
+  /**
+   * EXTRA CREDIT (constants): Implementation must use FREE_LIMIT from constants.
+   * Change the value in constants.ts and re-run tests; behavior should match the new value.
+   */
+  describe('extra credit: constants respected', () => {
+    it('free user gets exactly FREE_LIMIT allowed (implementation must read constant)', () => {
+      const user = 'free-constants-check';
+      userTiers.set(user, 'free');
+      let allowed = 0;
+      for (let i = 0; i < FREE_LIMIT + 2; i++) {
+        if (rateLimiter(user)) allowed++;
+      }
+      expect(allowed).toBe(FREE_LIMIT);
+    });
   });
 });

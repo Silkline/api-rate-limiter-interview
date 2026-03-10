@@ -1,5 +1,6 @@
 package com.silkline.ratelimit
 
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -63,6 +64,48 @@ class RateLimiterTest {
         assertFalse(RateLimiter.rateLimiter(user))
     }
 
+    @Test
+    fun isolationBetweenUsers() {
+        val userA = "free-isolation-a"
+        val userB = "free-isolation-b"
+        RateLimiter.userTiers[userA] = UserTier.FREE
+        RateLimiter.userTiers[userB] = UserTier.FREE
+
+        repeat(3) { RateLimiter.rateLimiter(userA) }
+        repeat(Constants.FREE_LIMIT) { assertTrue(RateLimiter.rateLimiter(userB)) }
+        assertFalse(RateLimiter.rateLimiter(userB))
+    }
+
+    @Test
+    fun paidUser_singleRequestThenWindowExpiry() {
+        val user = "paid-single-window"
+        RateLimiter.userTiers[user] = UserTier.PAID
+
+        assertTrue(RateLimiter.rateLimiter(user))
+        TimeUnit.SECONDS.sleep(Constants.WINDOW_SECONDS + 1L)
+        assertTrue(RateLimiter.rateLimiter(user))
+        assertTrue(RateLimiter.rateLimiter(user))
+        assertFalse(RateLimiter.rateLimiter(user))
+    }
+
+    @Test
+    fun paidUser_twoFullWindows() {
+        val user = "paid-two-windows"
+        RateLimiter.userTiers[user] = UserTier.PAID
+
+        assertTrue(RateLimiter.rateLimiter(user))
+        assertTrue(RateLimiter.rateLimiter(user))
+        assertFalse(RateLimiter.rateLimiter(user))
+        TimeUnit.SECONDS.sleep(Constants.WINDOW_SECONDS + 1L)
+        assertTrue(RateLimiter.rateLimiter(user))
+        assertTrue(RateLimiter.rateLimiter(user))
+        assertFalse(RateLimiter.rateLimiter(user))
+        TimeUnit.SECONDS.sleep(Constants.WINDOW_SECONDS + 1L)
+        assertTrue(RateLimiter.rateLimiter(user))
+        assertTrue(RateLimiter.rateLimiter(user))
+        assertFalse(RateLimiter.rateLimiter(user))
+    }
+
     /**
      * EXTRA CREDIT: Free user upgrades to paid.
      * After upgrade, paid rules apply and past requests (made when free) must count
@@ -86,5 +129,20 @@ class RateLimiterTest {
         assertTrue(RateLimiter.rateLimiter(user))
         assertTrue(RateLimiter.rateLimiter(user))
         assertFalse(RateLimiter.rateLimiter(user))
+    }
+
+    /**
+     * EXTRA CREDIT (constants): Implementation must use Constants.FREE_LIMIT.
+     * Change the value in Constants.kt and re-run tests; behavior should match.
+     */
+    @Test
+    fun extraCredit_constantsRespected() {
+        val user = "free-constants-check"
+        RateLimiter.userTiers[user] = UserTier.FREE
+        var allowed = 0
+        repeat(Constants.FREE_LIMIT + 2) {
+            if (RateLimiter.rateLimiter(user)) allowed++
+        }
+        assertEquals(Constants.FREE_LIMIT, allowed)
     }
 }

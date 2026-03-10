@@ -30,8 +30,12 @@ Use a **Map** (or equivalent) from user ID to tier (`'free'` | `'paid'`) to dete
 
 - **Free user:** First `FREE_LIMIT` calls ever return `true`; every call after that returns `false` (no reset).
 - **Paid user:** First `PAID_LIMIT` calls in a 5s window return `true`, then `false` until the window passes; after window, next requests are allowed again.
+- **Isolation between users:** Two different users have independent limits (e.g. free user A uses 3 requests; free user B still gets `FREE_LIMIT` allowed; paid user A uses 2 in window, paid user B still gets `PAID_LIMIT` in their own window).
+- **Paid: single request then window expiry:** Paid user makes 1 request, wait for window to pass, then gets `PAID_LIMIT` allowed then denied (proves window expiry with one request).
+- **Paid: two full windows:** Paid user uses 2 then denied; wait for window; 2 then denied; wait; 2 then denied (window resets correctly across multiple windows).
 - Tests use the same constants as the implementation (or import them) so changing constants still passes/fails correctly.
 - **Extra credit (must be clearly labeled in code and README):** Free user upgrades to paid — user makes some requests as free; tier is then changed to paid in the user map; subsequent requests must apply paid rules and must count **past requests** (made when the user was free) toward the paid 2-per-window limit, so the user does not get a fresh paid window on upgrade.
+- **Extra credit (constants):** Verify that the implementation respects the constants. In languages where constants can be overridden in test, add a test that temporarily sets `FREE_LIMIT` to a different value (e.g. 2) and asserts the user gets that many allowed then denied. In other languages, document that changing the constant in source and re-running tests should change behavior accordingly.
 
 ---
 

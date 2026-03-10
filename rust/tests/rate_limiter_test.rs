@@ -70,6 +70,64 @@ fn paid_user_allows_again_after_window() {
     assert!(!rate_limiter(user), "expected false");
 }
 
+#[test]
+fn isolation_between_users() {
+    reset_for_tests();
+    let user_a = "free-isolation-a";
+    let user_b = "free-isolation-b";
+    with_user_tiers_mut(|m| {
+        m.clear();
+        m.insert(user_a.to_string(), "free".to_string());
+        m.insert(user_b.to_string(), "free".to_string());
+    });
+
+    for _ in 0..3 {
+        assert!(rate_limiter(user_a));
+    }
+    for _ in 0..FREE_LIMIT {
+        assert!(rate_limiter(user_b));
+    }
+    assert!(!rate_limiter(user_b));
+}
+
+#[test]
+fn paid_single_request_then_window_expiry() {
+    reset_for_tests();
+    let user = "paid-single-window";
+    with_user_tiers_mut(|m| {
+        m.clear();
+        m.insert(user.to_string(), "paid".to_string());
+    });
+
+    assert!(rate_limiter(user));
+    thread::sleep(Duration::from_secs(WINDOW_SECONDS + 1));
+    assert!(rate_limiter(user));
+    assert!(rate_limiter(user));
+    assert!(!rate_limiter(user));
+}
+
+#[test]
+fn paid_two_full_windows() {
+    reset_for_tests();
+    let user = "paid-two-windows";
+    with_user_tiers_mut(|m| {
+        m.clear();
+        m.insert(user.to_string(), "paid".to_string());
+    });
+
+    assert!(rate_limiter(user));
+    assert!(rate_limiter(user));
+    assert!(!rate_limiter(user));
+    thread::sleep(Duration::from_secs(WINDOW_SECONDS + 1));
+    assert!(rate_limiter(user));
+    assert!(rate_limiter(user));
+    assert!(!rate_limiter(user));
+    thread::sleep(Duration::from_secs(WINDOW_SECONDS + 1));
+    assert!(rate_limiter(user));
+    assert!(rate_limiter(user));
+    assert!(!rate_limiter(user));
+}
+
 // --- EXTRA CREDIT: Free user upgrades to paid ---
 // After upgrade, paid rules apply and past requests (made when free) must count
 // toward the paid 2-per-window limit, so the user does NOT get a fresh paid window.
@@ -100,4 +158,22 @@ fn extra_credit_free_upgrades_to_paid() {
     assert!(rate_limiter(user), "expected true after window");
     assert!(rate_limiter(user), "expected true");
     assert!(!rate_limiter(user), "expected false");
+}
+
+// --- EXTRA CREDIT: Constants respected (implementation must use FREE_LIMIT) ---
+#[test]
+fn extra_credit_constants_respected() {
+    reset_for_tests();
+    let user = "free-constants-check";
+    with_user_tiers_mut(|m| {
+        m.clear();
+        m.insert(user.to_string(), "free".to_string());
+    });
+    let mut allowed = 0;
+    for _ in 0..FREE_LIMIT + 2 {
+        if rate_limiter(user) {
+            allowed += 1;
+        }
+    }
+    assert_eq!(FREE_LIMIT, allowed, "expected exactly FREE_LIMIT allowed");
 }
