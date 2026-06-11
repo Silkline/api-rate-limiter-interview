@@ -94,7 +94,7 @@ describe('rateLimiter', () => {
       expect(rateLimiter(user)).toBe(true);
       expect(rateLimiter(user)).toBe(true);
       expect(rateLimiter(user)).toBe(false);
-      await new Promise((r) => setTimeout(r, (WINDOW_SECONDS + 0.5) * 1000);
+      await new Promise((r) => setTimeout(r, (WINDOW_SECONDS + 0.5) * 1000));
       expect(rateLimiter(user)).toBe(true);
       expect(rateLimiter(user)).toBe(true);
       expect(rateLimiter(user)).toBe(false);
