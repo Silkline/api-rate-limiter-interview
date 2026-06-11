@@ -32,3 +32,11 @@ Tests set a user's tier via the exported `userTiers` Map (e.g. `userTiers.set("u
 ## Extra credit
 
 The test **"extra credit: free user upgrades to paid"** is optional. It verifies that when a free user is upgraded to paid, past requests (made when free) still count toward the paid 2-per-window limit. It is clearly labeled as extra credit in the test file.
+
+## Hard mode: concurrency (async)
+
+Node is single-threaded, so the synchronous `rateLimiter` cannot race. Hard mode instead asks you to implement **`rateLimiterAsync`** in [src/rateLimiterAsync.ts](src/rateLimiterAsync.ts), keeping all state in the provided `AsyncStore` (every `get`/`set` awaits simulated I/O, like a Redis client). 100 calls fired with `Promise.all` interleave on the event loop, so the naive check-then-record implementation sees stale counts and admits far more than the limit — you'll need to serialize the critical section per user (an async mutex / per-user promise chain). The tests are skipped by default; enable with:
+
+```bash
+HARD_MODE=1 npm test
+```

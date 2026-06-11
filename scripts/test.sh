@@ -15,7 +15,12 @@ run_typescript() {
 
 run_go() {
   echo "Running Go tests..."
-  (cd go && go test -v -timeout=15s ./...)
+  # HARD_MODE=1 enables the concurrency tests; run them under the race detector.
+  if [ -n "${HARD_MODE:-}" ]; then
+    (cd go && go test -v -timeout=120s -race ./...)
+  else
+    (cd go && go test -v -timeout=120s ./...)
+  fi
 }
 
 run_python() {
@@ -39,7 +44,12 @@ run_csharp() {
 
 run_rust() {
   echo "Running Rust tests..."
-  (cd rust && cargo test -- --test-threads=1)
+  # HARD_MODE=1 also runs the #[ignore]-marked hard-mode concurrency tests.
+  if [ -n "${HARD_MODE:-}" ]; then
+    (cd rust && cargo test -- --test-threads=1 --include-ignored)
+  else
+    (cd rust && cargo test -- --test-threads=1)
+  fi
 }
 
 run_ruby() {

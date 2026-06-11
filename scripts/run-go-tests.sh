@@ -10,4 +10,10 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 export PATH="/usr/local/go/bin:/go/bin:/opt/homebrew/bin:$PATH"
 
 cd "$REPO_ROOT/go"
-go test -v -timeout=15s ./...
+# Suite sleeps through several 5s windows once implemented, so allow ~2 minutes.
+# HARD_MODE=1 enables the concurrency tests; run them under the race detector.
+GO_FLAGS=()
+if [ -n "${HARD_MODE:-}" ]; then
+  GO_FLAGS+=(-race)
+fi
+go test -v -timeout=120s "${GO_FLAGS[@]}" ./...

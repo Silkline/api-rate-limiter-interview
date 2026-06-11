@@ -23,3 +23,11 @@ Tests set a user's tier via `RateLimiter.USER_TIERS` (e.g. `RateLimiter.USER_TIE
 ## Extra credit
 
 The test **`extraCredit_freeUpgradesToPaid`** is optional. It verifies that when a free user is upgraded to paid, past requests (made when free) still count toward the paid 2-per-window limit. It is clearly labeled as extra credit in the test name and Javadoc.
+
+## Hard mode: concurrency
+
+The tests **`hardMode_*`** are skipped by default. They release 100 threads at once against one user and require that **exactly** the limit is allowed — the naive check-then-record pattern races between reading the count and recording the request. Enable with:
+
+```bash
+HARD_MODE=1 mvn test
+```

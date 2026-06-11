@@ -38,3 +38,11 @@ Tests set a user's tier via the module-level `user_tiers` dict (e.g. `user_tiers
 ## Extra credit
 
 The test **`test_extra_credit_free_upgrades_to_paid`** is optional. It verifies that when a free user is upgraded to paid, past requests (made when free) still count toward the paid 2-per-window limit. It is clearly labeled as extra credit in the test name and comment.
+
+## Hard mode: concurrency
+
+The tests **`test_hard_mode_*`** are skipped by default. They release 50 threads at once against one user and require that **exactly** the limit is allowed. The test shrinks the interpreter's thread switch interval to make the check-then-record race likely despite the GIL; note an unsafe implementation may still pass occasionally, so be ready to defend the locking strategy. Enable with:
+
+```bash
+HARD_MODE=1 pytest -v
+```

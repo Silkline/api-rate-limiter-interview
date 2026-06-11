@@ -5,7 +5,11 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.concurrent.thread
 
 class RateLimiterTest {
 
@@ -144,5 +148,66 @@ class RateLimiterTest {
             if (RateLimiter.rateLimiter(user)) allowed++
         }
         assertEquals(Constants.FREE_LIMIT, allowed)
+    }
+
+    // --- HARD MODE: Concurrency safety ---
+    // Skipped unless HARD_MODE is set (e.g. HARD_MODE=1 ./gradlew test). The naive
+    // check-then-record pattern races between reading the count and recording
+    // the request, letting more than the limit through under concurrency.
+
+    /** Releases [threads] threads at once against the same user; returns how many were allowed. */
+    private fun countConcurrentAllowed(user: String, threads: Int): Int {
+        val start = CountDownLatch(1)
+        val done = CountDownLatch(threads)
+        val allowed = AtomicInteger()
+        val errors = AtomicInteger()
+        repeat(threads) {
+            thread {
+                try {
+                    start.await()
+                    if (RateLimiter.rateLimiter(user)) allowed.incrementAndGet()
+                } catch (t: Throwable) {
+                    errors.incrementAndGet()
+                } finally {
+                    done.countDown()
+                }
+            }
+        }
+        start.countDown()
+        assertTrue(done.await(30, TimeUnit.SECONDS), "threads did not finish in time")
+        assertEquals(0, errors.get(), "rate limiter threw under concurrency")
+        return allowed.get()
+    }
+
+    /**
+     * HARD MODE: 100 concurrent requests for one paid user — exactly PAID_LIMIT may succeed.
+     */
+    @Test
+    @EnabledIfEnvironmentVariable(named = "HARD_MODE", matches = ".+")
+    fun hardMode_paidUser_concurrentRequests() {
+        val user = "paid-concurrent-1"
+        RateLimiter.userTiers[user] = UserTier.PAID
+
+        assertEquals(
+            Constants.PAID_LIMIT,
+            countConcurrentAllowed(user, 100),
+            "expected exactly PAID_LIMIT allowed under concurrency",
+        )
+    }
+
+    /**
+     * HARD MODE: 100 concurrent requests for one free user — exactly FREE_LIMIT may succeed.
+     */
+    @Test
+    @EnabledIfEnvironmentVariable(named = "HARD_MODE", matches = ".+")
+    fun hardMode_freeUser_concurrentRequests() {
+        val user = "free-concurrent-1"
+        RateLimiter.userTiers[user] = UserTier.FREE
+
+        assertEquals(
+            Constants.FREE_LIMIT,
+            countConcurrentAllowed(user, 100),
+            "expected exactly FREE_LIMIT allowed under concurrency",
+        )
     }
 }

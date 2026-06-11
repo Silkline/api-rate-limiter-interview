@@ -3,6 +3,19 @@ using ApiRateLimiter;
 
 namespace ApiRateLimiterTests;
 
+/// <summary>
+/// Marks a HARD MODE test: skipped unless the HARD_MODE environment variable is set
+/// (e.g. HARD_MODE=1 dotnet test).
+/// </summary>
+public sealed class HardModeFactAttribute : FactAttribute
+{
+    public HardModeFactAttribute()
+    {
+        if (Environment.GetEnvironmentVariable("HARD_MODE") is null)
+            Skip = "HARD MODE: set HARD_MODE=1 to enable concurrency tests";
+    }
+}
+
 public class RateLimiterTests : IDisposable
 {
     public void Dispose() => RateLimiter.UserTiers.Clear();
@@ -147,5 +160,65 @@ public class RateLimiterTests : IDisposable
             if (RateLimiter.AllowRequest(user)) allowed++;
         }
         Assert.Equal(Constants.FreeLimit, allowed);
+    }
+
+    // --- HARD MODE: Concurrency safety ---
+    // Skipped unless HARD_MODE is set (e.g. HARD_MODE=1 dotnet test). The naive
+    // check-then-record pattern races between reading the count and recording
+    // the request, letting more than the limit through under concurrency.
+
+    /// <summary>Releases <paramref name="threads"/> threads at once against the same user; returns how many were allowed.</summary>
+    private static int CountConcurrentAllowed(string user, int threads)
+    {
+        using var start = new ManualResetEventSlim(false);
+        var allowed = 0;
+        var errors = 0;
+        var workers = new Thread[threads];
+        for (var i = 0; i < threads; i++)
+        {
+            workers[i] = new Thread(() =>
+            {
+                start.Wait();
+                try
+                {
+                    if (RateLimiter.AllowRequest(user))
+                        Interlocked.Increment(ref allowed);
+                }
+                catch
+                {
+                    Interlocked.Increment(ref errors);
+                }
+            });
+            workers[i].Start();
+        }
+        start.Set();
+        foreach (var worker in workers)
+            worker.Join();
+        Assert.Equal(0, errors);
+        return allowed;
+    }
+
+    /// <summary>
+    /// HARD MODE: 100 concurrent requests for one paid user — exactly PaidLimit may succeed.
+    /// </summary>
+    [HardModeFact]
+    public void HardMode_PaidUser_ConcurrentRequests()
+    {
+        var user = "paid-concurrent-1";
+        RateLimiter.UserTiers[user] = UserTier.Paid;
+
+        Assert.Equal(Constants.PaidLimit, CountConcurrentAllowed(user, 100));
+    }
+
+    /// <summary>
+    /// HARD MODE: 100 concurrent requests for one free user — exactly FreeLimit may succeed.
+    /// </summary>
+    [HardModeFact]
+    public void HardMode_FreeUser_ConcurrentRequests()
+    {
+        var user = "free-concurrent-1";
+        RateLimiter.UserTiers[user] = UserTier.Free;
+
+        Assert.Equal(Constants.FreeLimit, CountConcurrentAllowed(user, 100));
     }
 }

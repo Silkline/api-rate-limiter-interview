@@ -1,6 +1,7 @@
 use rate_limiter::{
     rate_limiter, reset_for_tests, with_user_tiers_mut, FREE_LIMIT, PAID_LIMIT, WINDOW_SECONDS,
 };
+use std::sync::{Arc, Barrier};
 use std::thread;
 use std::time::Duration;
 
@@ -176,4 +177,66 @@ fn extra_credit_constants_respected() {
         }
     }
     assert_eq!(FREE_LIMIT, allowed, "expected exactly FREE_LIMIT allowed");
+}
+
+// --- HARD MODE: Concurrency safety ---
+// Ignored by default; run with `cargo test -- --include-ignored` (or
+// HARD_MODE=1 ./scripts/test.sh rust). In Rust the compiler forces shared state
+// to be Sync, so the lesson is choosing and scoping the lock (Mutex/RwLock,
+// per-user vs. global) — and the naive check-then-record still over-admits if
+// the lock is released between the check and the record.
+
+/// Releases `n` threads at once against the same user; returns how many were allowed.
+fn count_concurrent_allowed(user: &'static str, n: usize) -> usize {
+    let barrier = Arc::new(Barrier::new(n));
+    let handles: Vec<_> = (0..n)
+        .map(|_| {
+            let barrier = Arc::clone(&barrier);
+            thread::spawn(move || {
+                barrier.wait();
+                rate_limiter(user)
+            })
+        })
+        .collect();
+    handles
+        .into_iter()
+        .map(|h| h.join().expect("rate limiter panicked under concurrency"))
+        .filter(|&allowed| allowed)
+        .count()
+}
+
+// HARD MODE: 100 concurrent requests for one paid user — exactly PAID_LIMIT may succeed.
+#[test]
+#[ignore = "HARD MODE: run with `cargo test -- --include-ignored`"]
+fn hard_mode_paid_user_concurrent_requests() {
+    reset_for_tests();
+    let user = "paid-concurrent-1";
+    with_user_tiers_mut(|m| {
+        m.clear();
+        m.insert(user.to_string(), "paid".to_string());
+    });
+
+    assert_eq!(
+        PAID_LIMIT,
+        count_concurrent_allowed(user, 100),
+        "expected exactly PAID_LIMIT allowed under concurrency"
+    );
+}
+
+// HARD MODE: 100 concurrent requests for one free user — exactly FREE_LIMIT may succeed.
+#[test]
+#[ignore = "HARD MODE: run with `cargo test -- --include-ignored`"]
+fn hard_mode_free_user_concurrent_requests() {
+    reset_for_tests();
+    let user = "free-concurrent-1";
+    with_user_tiers_mut(|m| {
+        m.clear();
+        m.insert(user.to_string(), "free".to_string());
+    });
+
+    assert_eq!(
+        FREE_LIMIT,
+        count_concurrent_allowed(user, 100),
+        "expected exactly FREE_LIMIT allowed under concurrency"
+    );
 }

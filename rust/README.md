@@ -31,3 +31,15 @@ Tests set a user's tier via `rate_limiter::with_user_tiers_mut()` (e.g. `with_us
 ## Extra credit
 
 The test **`extra_credit_free_upgrades_to_paid`** is optional. It verifies that when a free user is upgraded to paid, past requests (made when free) still count toward the paid 2-per-window limit. It is clearly labeled as extra credit in the test name and comment.
+
+## Hard mode: concurrency
+
+The tests **`hard_mode_*`** are `#[ignore]`d by default. They release 100 threads at once against one user and require that **exactly** the limit is allowed. Rust's compiler forces shared state to be `Sync` (e.g. `Mutex`/`RwLock`), so the exercise is choosing and scoping the lock — and the naive pattern still over-admits if the lock is released between the check and the record. Run with:
+
+```bash
+cargo test -- --test-threads=1 --include-ignored
+```
+
+(`--test-threads=1` matters: the tests share the limiter's global state and are written to run sequentially.)
+
+or from the repo root: `HARD_MODE=1 ./scripts/test.sh rust`.

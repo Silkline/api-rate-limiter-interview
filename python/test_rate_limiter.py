@@ -1,3 +1,6 @@
+import os
+import sys
+import threading
 import time
 
 import pytest
@@ -138,3 +141,79 @@ def test_extra_credit_constants_respected():
         assert rate_limiter(user) is False
     finally:
         rl.FREE_LIMIT = old_limit
+
+
+# --- HARD MODE: Concurrency safety ---
+# Skipped unless HARD_MODE is set (e.g. HARD_MODE=1 pytest). The naive
+# check-then-record pattern races between reading the count and recording the
+# request. CPython's GIL makes the race rare by default, so we shrink the
+# interpreter's thread switch interval to force frequent interleaving; even so,
+# an unsafe implementation may occasionally pass — treat this test as a floor
+# and discuss the locking strategy.
+
+hard_mode = pytest.mark.skipif(
+    not os.environ.get("HARD_MODE"),
+    reason="HARD MODE: set HARD_MODE=1 to enable concurrency tests",
+)
+
+
+def _count_concurrent_allowed(user, count, calls_per_thread=5):
+    """Release `count` threads at once against the same user; return how many calls were allowed.
+
+    Each thread makes several calls: with the GIL, a single check-then-record
+    rarely gets interrupted, but repeated overlapping calls make the race fire
+    reliably for unsafe implementations.
+    """
+    barrier = threading.Barrier(count)
+    results = [0] * count
+    errors = []
+
+    def worker(i):
+        try:
+            barrier.wait()
+            for _ in range(calls_per_thread):
+                if rate_limiter(user):
+                    results[i] += 1
+        except Exception as exc:  # noqa: BLE001 — report any failure under concurrency
+            errors.append(exc)
+
+    old_interval = sys.getswitchinterval()
+    sys.setswitchinterval(1e-6)
+    try:
+        threads = [threading.Thread(target=worker, args=(i,)) for i in range(count)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+    finally:
+        sys.setswitchinterval(old_interval)
+
+    assert not errors, f"rate limiter raised under concurrency: {errors[:3]}"
+    return sum(results)
+
+
+# Several rounds with a fresh user each: under the GIL the race only fires
+# sometimes, so one round can miss an unsafe implementation that repeated
+# rounds reliably catch. A thread-safe implementation passes every round.
+@hard_mode
+def test_hard_mode_paid_user_concurrent_requests():
+    for round_idx in range(10):
+        user = f"paid-concurrent-{round_idx}"
+        user_tiers[user] = "paid"
+
+        allowed = _count_concurrent_allowed(user, 100)
+        assert allowed == PAID_LIMIT, (
+            f"round {round_idx}: expected exactly {PAID_LIMIT} allowed under concurrency, got {allowed}"
+        )
+
+
+@hard_mode
+def test_hard_mode_free_user_concurrent_requests():
+    for round_idx in range(10):
+        user = f"free-concurrent-{round_idx}"
+        user_tiers[user] = "free"
+
+        allowed = _count_concurrent_allowed(user, 100)
+        assert allowed == FREE_LIMIT, (
+            f"round {round_idx}: expected exactly {FREE_LIMIT} allowed under concurrency, got {allowed}"
+        )

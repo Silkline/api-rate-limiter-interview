@@ -31,3 +31,13 @@ Tests set a user's tier via `RateLimiter.userTiers` (e.g. `RateLimiter.userTiers
 ## Extra credit
 
 The test **`extraCredit_freeUpgradesToPaid`** is optional. It verifies that when a free user is upgraded to paid, past requests (made when free) still count toward the paid 2-per-window limit. It is clearly labeled as extra credit in the test name and comment.
+
+## Hard mode: concurrency
+
+The tests **`hardMode_*`** are skipped by default. They release 100 threads at once against one user and require that **exactly** the limit is allowed — the naive check-then-record pattern races between reading the count and recording the request. Enable with:
+
+```bash
+HARD_MODE=1 ./gradlew test --no-daemon
+```
+
+(`--no-daemon` ensures the environment variable reaches the test JVM even if a Gradle daemon is already running.)

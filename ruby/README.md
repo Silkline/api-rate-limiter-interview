@@ -25,3 +25,11 @@ Tests set a user's tier via `USER_TIERS` (e.g. `USER_TIERS["user1"] = "free"`). 
 ## Extra credit
 
 The test **`test_extra_credit_free_upgrades_to_paid`** is optional. It verifies that when a free user is upgraded to paid, past requests (made when free) still count toward the paid 2-per-window limit. It is clearly labeled as extra credit in the test name and comment.
+
+## Hard mode: concurrency
+
+The tests **`test_hard_mode_*`** are skipped by default. They release 50 threads at once against one user and require that **exactly** the limit is allowed. MRI's GVL makes the check-then-record race rare in practice, so an unsafe implementation may still pass occasionally — be ready to defend the locking strategy. Enable with:
+
+```bash
+HARD_MODE=1 bundle exec ruby -Ilib:test test/rate_limiter_test.rb
+```

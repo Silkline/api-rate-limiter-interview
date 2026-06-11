@@ -10,6 +10,7 @@ A small API rate limiter exercise used for interviews. This repo is a monorepo: 
 - **Free users:** 5 total requests ever (lifetime cap). Constants are configurable.
 - **Paid users:** 2 requests per 5-second window; window resets.
 - **API:** One function `rateLimiter(userId)` returns `true` (allowed) or `false` (rate limited). A Map from user ID to tier (`'free'` | `'paid'`) determines which limits apply.
+- **Hard mode (optional):** The limiter must admit exactly the limit under concurrent calls. Each language has labeled concurrency tests, skipped by default — enable with `HARD_MODE=1 ./scripts/test.sh <lang>`. See [SPEC.md](SPEC.md) §3 and each language README for details.
 
 ## Languages
 
