@@ -20,13 +20,13 @@ Python implementation of the API rate limiter. See [SPEC.md](../SPEC.md) for the
 From the `python` directory (with venv activated):
 
 ```bash
-pytest -v
+pytest -vs
 ```
 
 For the test that sleeps for the window, default timeout is fine. To run with a longer timeout:
 
 ```bash
-pytest -v --timeout=15
+pytest -vs --timeout=15
 ```
 
 (Requires `pytest-timeout`; optional.)
