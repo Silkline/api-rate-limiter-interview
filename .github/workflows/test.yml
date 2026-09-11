@@ -1,4 +1,9 @@
-name: Tests
+# Verifies that every language's harness works on a fresh clone:
+# dependencies install, the code compiles/type-checks, and the always-passing
+# "harness smoke" test runs. The full suites are NOT run here because the repo
+# ships unimplemented stubs (every other test is expected to fail until a
+# candidate implements the rate limiter).
+name: Harness check
 
 on:
   push:
@@ -6,9 +11,13 @@ on:
   pull_request:
     branches: ["**"]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test:
-    name: Test ${{ matrix.language }}
+  verify:
+    name: Verify ${{ matrix.language }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -30,13 +39,13 @@ jobs:
         if: matrix.language == 'go'
         uses: actions/setup-go@v5
         with:
-          go-version: "1.21"
+          go-version-file: go/go.mod
 
       - name: Set up Python
         if: matrix.language == 'python'
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Set up Java
         if: matrix.language == 'java' || matrix.language == 'kotlin'
@@ -55,21 +64,16 @@ jobs:
 
       - name: Set up Rust
         if: matrix.language == 'rust'
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Set up Ruby
         if: matrix.language == 'ruby'
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.3"
-          bundler-cache: true
 
-      - name: Install and run tests
+      - name: Install, compile, and run the harness smoke test
         env:
-          LANG: ${{ matrix.language }}
-        run: |
-          ./scripts/install.sh "$LANG"
-          ./scripts/test.sh "$LANG"
-        timeout-minutes: 5
+          TARGET_LANG: ${{ matrix.language }}
+        run: ./scripts/verify.sh "$TARGET_LANG"
+        timeout-minutes: 10

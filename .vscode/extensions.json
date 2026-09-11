@@ -10,7 +10,7 @@
     "ms-dotnettools.csharp",
     "vitest.explorer",
     "rust-lang.rust-analyzer",
-    "rebornix.ruby",
+    "Shopify.ruby-lsp",
     "fwcd.kotlin"
   ]
 }

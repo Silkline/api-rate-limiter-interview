@@ -1,151 +1,197 @@
 using Xunit;
 using ApiRateLimiter;
+using static ApiRateLimiter.Constants;
+using static ApiRateLimiter.RateLimiter;
 
 namespace ApiRateLimiterTests;
 
+/// <summary>
+/// Tests for the API rate limiter. See SPEC.md section 3 for what each test verifies.
+///
+/// All expectations are derived from FreeLimit / PaidLimit / WindowSeconds, so changing
+/// those constants in Constants.cs changes what the tests expect.
+///
+/// Tests that wait for the paid window sleep for real, so the full suite takes roughly
+/// 6 * (WindowSeconds + 1) seconds (about 36s with the defaults).
+/// </summary>
 public class RateLimiterTests : IDisposable
 {
-    public void Dispose() => RateLimiter.UserTiers.Clear();
+    /// <summary>Wait a little longer than the window so we are safely on the other side of it.</summary>
+    private static readonly TimeSpan Wait = TimeSpan.FromSeconds(WindowSeconds + 1);
+
+    // xUnit creates a new instance per test; clear shared state before and after each one.
+    public RateLimiterTests() => UserTiers.Clear();
+    public void Dispose() => UserTiers.Clear();
+
+    private static void ExpectAllowed(string user, int count, string label)
+    {
+        for (var i = 0; i < count; i++)
+            Assert.True(AllowRequest(user), $"{label}: request {i + 1} of {count} should be allowed");
+    }
+
+    private static void ExpectDenied(string user, string label)
+        => Assert.False(AllowRequest(user), $"{label}: should be denied");
+
+    /// <summary>Passes even with the unimplemented stub. If this fails, your environment is broken.</summary>
+    [Fact]
+    public void HarnessSmoke()
+    {
+        Assert.True(FreeLimit > 0);
+        Assert.True(PaidLimit > 0);
+        Assert.True(WindowSeconds > 0);
+        Assert.Empty(UserTiers);
+        _ = AllowRequest("smoke-user");
+    }
 
     [Fact]
     public void FreeUser_AllowsThenDenies()
     {
         var user = "free-user-1";
-        RateLimiter.UserTiers[user] = UserTier.Free;
+        UserTiers[user] = UserTier.Free;
 
-        for (var i = 0; i < Constants.FreeLimit; i++)
-            Assert.True(RateLimiter.AllowRequest(user), $"request {i + 1}");
-        Assert.False(RateLimiter.AllowRequest(user));
-        Assert.False(RateLimiter.AllowRequest(user));
+        ExpectAllowed(user, FreeLimit, "free");
+        ExpectDenied(user, "request beyond FreeLimit");
+        ExpectDenied(user, "request beyond FreeLimit");
     }
 
     [Fact]
     public void FreeUser_NeverResets()
     {
         var user = "free-user-2";
-        RateLimiter.UserTiers[user] = UserTier.Free;
+        UserTiers[user] = UserTier.Free;
 
-        for (var i = 0; i < Constants.FreeLimit; i++)
-            RateLimiter.AllowRequest(user);
-        Assert.False(RateLimiter.AllowRequest(user));
-        Assert.False(RateLimiter.AllowRequest(user));
+        ExpectAllowed(user, FreeLimit, "free");
+        ExpectDenied(user, "request beyond FreeLimit");
+
+        // Waiting past a paid window must NOT help a free user: the cap is for life.
+        Thread.Sleep(Wait);
+        ExpectDenied(user, "free cap must not reset after waiting");
+        ExpectDenied(user, "free cap must not reset after waiting");
     }
 
     [Fact]
     public void PaidUser_AllowsThenDenies()
     {
         var user = "paid-user-1";
-        RateLimiter.UserTiers[user] = UserTier.Paid;
+        UserTiers[user] = UserTier.Paid;
 
-        Assert.True(RateLimiter.AllowRequest(user));
-        Assert.True(RateLimiter.AllowRequest(user));
-        Assert.False(RateLimiter.AllowRequest(user));
+        ExpectAllowed(user, PaidLimit, "paid");
+        ExpectDenied(user, "request beyond PaidLimit in the window");
     }
 
     [Fact]
     public void PaidUser_AllowsAgainAfterWindow()
     {
         var user = "paid-user-2";
-        RateLimiter.UserTiers[user] = UserTier.Paid;
+        UserTiers[user] = UserTier.Paid;
 
-        RateLimiter.AllowRequest(user);
-        RateLimiter.AllowRequest(user);
-        Assert.False(RateLimiter.AllowRequest(user));
+        ExpectAllowed(user, PaidLimit, "window 1");
+        ExpectDenied(user, "window 1: beyond PaidLimit");
 
-        Thread.Sleep(TimeSpan.FromSeconds(Constants.WindowSeconds + 1));
+        Thread.Sleep(Wait);
 
-        Assert.True(RateLimiter.AllowRequest(user));
-        Assert.True(RateLimiter.AllowRequest(user));
-        Assert.False(RateLimiter.AllowRequest(user));
-    }
-
-    [Fact]
-    public void IsolationBetweenUsers()
-    {
-        var userA = "free-isolation-a";
-        var userB = "free-isolation-b";
-        RateLimiter.UserTiers[userA] = UserTier.Free;
-        RateLimiter.UserTiers[userB] = UserTier.Free;
-
-        for (var i = 0; i < 3; i++)
-            Assert.True(RateLimiter.AllowRequest(userA));
-        for (var i = 0; i < Constants.FreeLimit; i++)
-            Assert.True(RateLimiter.AllowRequest(userB));
-        Assert.False(RateLimiter.AllowRequest(userB));
+        ExpectAllowed(user, PaidLimit, "after window");
+        ExpectDenied(user, "after window: beyond PaidLimit");
     }
 
     [Fact]
     public void PaidUser_SingleRequestThenWindowExpiry()
     {
         var user = "paid-single-window";
-        RateLimiter.UserTiers[user] = UserTier.Paid;
+        UserTiers[user] = UserTier.Paid;
 
-        Assert.True(RateLimiter.AllowRequest(user));
-        Thread.Sleep(TimeSpan.FromSeconds(Constants.WindowSeconds + 1));
-        Assert.True(RateLimiter.AllowRequest(user));
-        Assert.True(RateLimiter.AllowRequest(user));
-        Assert.False(RateLimiter.AllowRequest(user));
+        ExpectAllowed(user, 1, "first request");
+        Thread.Sleep(Wait);
+        ExpectAllowed(user, PaidLimit, "old request must have expired");
+        ExpectDenied(user, "after window: beyond PaidLimit");
     }
 
     [Fact]
     public void PaidUser_TwoFullWindows()
     {
         var user = "paid-two-windows";
-        RateLimiter.UserTiers[user] = UserTier.Paid;
+        UserTiers[user] = UserTier.Paid;
 
-        Assert.True(RateLimiter.AllowRequest(user));
-        Assert.True(RateLimiter.AllowRequest(user));
-        Assert.False(RateLimiter.AllowRequest(user));
-        Thread.Sleep(TimeSpan.FromSeconds(Constants.WindowSeconds + 1));
-        Assert.True(RateLimiter.AllowRequest(user));
-        Assert.True(RateLimiter.AllowRequest(user));
-        Assert.False(RateLimiter.AllowRequest(user));
-        Thread.Sleep(TimeSpan.FromSeconds(Constants.WindowSeconds + 1));
-        Assert.True(RateLimiter.AllowRequest(user));
-        Assert.True(RateLimiter.AllowRequest(user));
-        Assert.False(RateLimiter.AllowRequest(user));
+        for (var w = 1; w <= 3; w++)
+        {
+            ExpectAllowed(user, PaidLimit, $"window {w}");
+            ExpectDenied(user, $"window {w}: beyond PaidLimit");
+            if (w < 3) Thread.Sleep(Wait);
+        }
+    }
+
+    [Fact]
+    public void Isolation_BetweenFreeUsers()
+    {
+        var userA = "free-isolation-a";
+        var userB = "free-isolation-b";
+        UserTiers[userA] = UserTier.Free;
+        UserTiers[userB] = UserTier.Free;
+
+        ExpectAllowed(userA, FreeLimit, "user A");
+        ExpectDenied(userA, "user A beyond FreeLimit");
+
+        ExpectAllowed(userB, FreeLimit, "user B must not be affected by user A");
+        ExpectDenied(userB, "user B beyond FreeLimit");
+    }
+
+    [Fact]
+    public void Isolation_BetweenPaidUsers()
+    {
+        var userA = "paid-isolation-a";
+        var userB = "paid-isolation-b";
+        UserTiers[userA] = UserTier.Paid;
+        UserTiers[userB] = UserTier.Paid;
+
+        ExpectAllowed(userA, PaidLimit, "user A");
+        ExpectDenied(userA, "user A beyond PaidLimit");
+
+        ExpectAllowed(userB, PaidLimit, "user B must not be affected by user A");
+        ExpectDenied(userB, "user B beyond PaidLimit");
     }
 
     /// <summary>
-    /// EXTRA CREDIT: Free user upgrades to paid.
-    /// After upgrade, paid rules apply and past requests (made when free) must count
-    /// toward the paid 2-per-window limit, so the user does NOT get a fresh paid window.
+    /// EXTRA CREDIT: free user upgrades to paid.
+    /// After the upgrade, paid rules apply AND requests made while free still count toward the
+    /// current paid window, so the user does NOT get a fresh window just by upgrading.
     /// </summary>
     [Fact]
     public void ExtraCredit_FreeUpgradesToPaid()
     {
+        // Assumes PaidLimit <= FreeLimit; otherwise a free user could not make PaidLimit requests.
+        if (PaidLimit > FreeLimit) return;
+
         var user = "upgrade-user-1";
-        RateLimiter.UserTiers[user] = UserTier.Free;
+        UserTiers[user] = UserTier.Free;
 
-        Assert.True(RateLimiter.AllowRequest(user));
-        Assert.True(RateLimiter.AllowRequest(user));
+        ExpectAllowed(user, PaidLimit, "as free");
 
-        RateLimiter.UserTiers[user] = UserTier.Paid;
+        UserTiers[user] = UserTier.Paid;
 
-        // Paid limit is 2 per window; we already have 2 in this window
-        Assert.False(RateLimiter.AllowRequest(user));
+        // Already made PaidLimit requests inside this window -> denied.
+        ExpectDenied(user, "past free requests must count toward the paid window");
 
-        Thread.Sleep(TimeSpan.FromSeconds(Constants.WindowSeconds + 1));
+        Thread.Sleep(Wait);
 
-        Assert.True(RateLimiter.AllowRequest(user));
-        Assert.True(RateLimiter.AllowRequest(user));
-        Assert.False(RateLimiter.AllowRequest(user));
+        ExpectAllowed(user, PaidLimit, "after window");
+        ExpectDenied(user, "after window: beyond PaidLimit");
     }
 
     /// <summary>
-    /// EXTRA CREDIT (constants): Implementation must use Constants.FreeLimit.
-    /// Change the value in Constants.cs and re-run tests; behavior should match.
+    /// EXTRA CREDIT (constants): the implementation must read Constants.FreeLimit rather than
+    /// hard-coding 5. C# const cannot be overridden at runtime, so this test only counts;
+    /// to really check, change FreeLimit in Constants.cs and re-run.
     /// </summary>
     [Fact]
     public void ExtraCredit_ConstantsRespected()
     {
         var user = "free-constants-check";
-        RateLimiter.UserTiers[user] = UserTier.Free;
+        UserTiers[user] = UserTier.Free;
         var allowed = 0;
-        for (var i = 0; i < Constants.FreeLimit + 2; i++)
+        for (var i = 0; i < FreeLimit + 2; i++)
         {
-            if (RateLimiter.AllowRequest(user)) allowed++;
+            if (AllowRequest(user)) allowed++;
         }
-        Assert.Equal(Constants.FreeLimit, allowed);
+        Assert.Equal(FreeLimit, allowed);
     }
 }

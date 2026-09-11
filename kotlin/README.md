@@ -1,33 +1,39 @@
 # API Rate Limiter — Kotlin
 
-Kotlin implementation of the API rate limiter. See [SPEC.md](../SPEC.md) for the full problem and requirements.
+Problem and requirements: [SPEC.md](../SPEC.md). Interview flow: [INTERVIEW.md](../INTERVIEW.md).
 
-## Setup (VS Code / GitHub Codespaces)
+| | |
+| --- | --- |
+| **File to implement** | `src/main/kotlin/com/silkline/ratelimit/RateLimiter.kt` → `fun rateLimiter(userId: String): Boolean` |
+| **Constants** | `src/main/kotlin/com/silkline/ratelimit/Constants.kt` (`FREE_LIMIT`, `PAID_LIMIT`, `WINDOW_SECONDS`) |
+| **User tier map** | `RateLimiter.userTiers` (`ConcurrentHashMap<String, UserTier>`, values `FREE` / `PAID`); tests set it, you read it |
+| **Tests** | `src/test/kotlin/com/silkline/ratelimit/RateLimiterTest.kt` (JUnit 5) |
+| **Requires** | JDK 17+ (`java -version`). Gradle is **not** required: `./gradlew` downloads it on first use |
 
-1. Open this folder in VS Code (or open the repo in [GitHub Codespaces](https://github.com/features/codespaces)).
-2. Ensure JDK 17+ is installed (`java -version`).
-3. The project uses the Gradle wrapper; no need to install Gradle. From the `kotlin` directory run `./gradlew build` to resolve dependencies (optional; `./gradlew test` will do it as well).
+## Setup
+
+```bash
+cd kotlin
+./gradlew compileTestKotlin      # Windows: gradlew.bat compileTestKotlin
+```
+
+The first run downloads Gradle and the Kotlin compiler (a few minutes); later runs are fast.
+Or from the repo root: `./scripts/verify.sh kotlin` (compiles and runs the smoke test).
 
 ## Run tests
 
-From the `kotlin` directory:
-
 ```bash
-./gradlew test
+./gradlew test                                              # full suite, about 40 seconds (paid-window tests really wait)
+./gradlew test --tests '*RateLimiterTest.freeUser*'         # only tests whose name matches
 ```
 
-With more output:
+Each test's pass/fail is printed. Or from the repo root: `./scripts/test.sh kotlin`, or VS Code
+**Terminal → Run Task → Tests: Kotlin**.
 
-```bash
-./gradlew test --info
-```
+On a fresh clone every test except `harnessSmoke` fails: the function is a stub. That is expected.
 
-Tests include one that sleeps for the paid window (5+ seconds); total test time is about 15–20 seconds.
+## Extra credit (clearly labelled in the test file)
 
-## User tier map
-
-Tests set a user's tier via `RateLimiter.userTiers` (e.g. `RateLimiter.userTiers["user1"] = UserTier.FREE`). The rate limiter reads from this map to decide which limits apply.
-
-## Extra credit
-
-The test **`extraCredit_freeUpgradesToPaid`** is optional. It verifies that when a free user is upgraded to paid, past requests (made when free) still count toward the paid 2-per-window limit. It is clearly labeled as extra credit in the test name and comment.
+- **`extraCredit_freeUpgradesToPaid`** — after a free user is switched to `PAID` in `userTiers`, requests made while
+  free still count toward the current paid window.
+- **`extraCredit_constantsRespected`** — read `Constants.FREE_LIMIT`; change it and re-run to check.

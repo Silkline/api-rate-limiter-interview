@@ -4,35 +4,65 @@ Use this with candidates for the API rate limiter exercise.
 
 ## For interviewers
 
-- **Before the interview:** Share the repo (or a Codespaces link). Optionally use **GitHub Codespaces** so the candidate gets a pre-built environment (Node, Go, Python, Java, C# and dependencies installed via the devcontainer).
-- **Problem:** Point candidates to [SPEC.md](SPEC.md) (or the problem statement in §1 there). They implement in **one** language of their choice.
-- **Time:** Suggest 30–45 minutes; adjust for your process. Aim for ~30–45 minutes; focus on core behavior first, then extra credit if time allows.
-- **Running tests:** Candidates can run tests anytime to check their work. Core tests must pass; the free→paid upgrade test is **extra credit** and should be clearly labeled.
-- **Verification:** After the session, run `./scripts/test.sh <lang>` (or use VS Code **Run Task → Tests: &lt;language&gt;** or **Tests: All**) to confirm tests pass.
+**Before the session (5 minutes)**
+
+1. Ask the candidate which language they will use.
+2. Pre-flight the environment they will use. On your machine, in a Codespace, or on theirs:
+
+   ```bash
+   ./scripts/verify.sh <language>
+   ```
+
+   It installs dependencies, compiles, and runs the always-passing `harness smoke` test. It prints
+   `Verify OK` when the toolchain works. It does **not** require an implementation.
+3. Share the repo (clone URL, a Codespaces link, or a VS Code Live Share session; `.vscode/settings.json`
+   already allows guests to run tasks and debug).
+
+**During the session**
+
+- Point the candidate at [SPEC.md](SPEC.md) §1 and the file to implement (see the table in
+  [README.md](README.md)). Time box: about 30–45 minutes.
+- Core tests first, then extra credit if time allows. The extra-credit tests are named
+  `extra credit` / `extraCredit_` / `extra_credit_` in every language.
+- The candidate can run `./scripts/test.sh <language>` as often as they like. A full run takes about 40 seconds
+  because the paid-window tests really wait for the window. Suggest running a single test while iterating
+  (see the language README for the filter flag).
+
+**After the session**
+
+- Run `./scripts/test.sh <language>` once more to confirm which tests pass.
+- Optional: change `PAID_LIMIT` or `FREE_LIMIT` in the constants file and re-run. The tests derive every
+  expectation from the constants, so a correct implementation still passes and a hard-coded one fails.
 
 ## For candidates
 
-1. **Read the problem** in [SPEC.md](SPEC.md) (§1 Problem statement).
-2. **Pick one language** (TypeScript, Go, Python, Java, or C#) and open that folder.
-3. **Set up** (if not using Codespaces):
-   - From repo root: `./scripts/install.sh <language>`  
-   - Or follow the README in that language’s folder.
-4. **Implement** the rate limiter and user-tier Map so the **core** tests pass (free: 5 ever, paid: 2 per 5s window).
-5. **Run tests** often:
-   - From repo root: `./scripts/test.sh <language>`
-   - Or from the language folder: `npm test` / `go test` / `pytest` / `mvn test` / `dotnet test`
-   - Or in VS Code: **Terminal → Run Task → Tests: &lt;language&gt;**
-6. **Extra credit:** Implement the free→paid upgrade behavior so the labeled extra-credit test passes (past requests count toward the paid window).
+1. **Read the problem** in [SPEC.md](SPEC.md) §1.
+2. **Pick one language** from the table in [README.md](README.md) and note the file to implement.
+3. **Check your environment:** `./scripts/verify.sh <language>` (or open the repo in GitHub Codespaces, where
+   everything is pre-installed).
+4. **Implement** `rateLimiter` so the core tests pass: free users get `FREE_LIMIT` requests ever; paid users get
+   `PAID_LIMIT` per `WINDOW_SECONDS`-second window. Read the constants at call time rather than copying them.
+5. **Run the tests often:** `./scripts/test.sh <language>`, or the native command below, or the VS Code task
+   **Tests: \<Language\>**.
+6. **Extra credit** if time allows: the free→paid upgrade test and the constants test, both clearly labelled.
+
+Until you implement the function, every test except `harness smoke` fails. That is expected. If you see a
+compile error or a "command not found" instead, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
 ## Quick reference
 
-| Language   | Install (from repo root)     | Run tests (from repo root)   |
-| ---------- | ----------------------------- | ---------------------------- |
-| TypeScript | `./scripts/install.sh typescript` | `./scripts/test.sh typescript` |
-| Go         | `./scripts/install.sh go`    | `./scripts/test.sh go`       |
-| Python     | `./scripts/install.sh python`| `./scripts/test.sh python`   |
-| Java       | `./scripts/install.sh java`  | `./scripts/test.sh java`     |
-| C#         | `./scripts/install.sh csharp`| `./scripts/test.sh csharp`   |
-| All        | `./scripts/install.sh all`   | `./scripts/test.sh all`      |
+All script commands run from the repo root. Native commands run from the language folder.
 
-**Windows:** If you don’t have Bash, run the equivalent commands from each language’s README (e.g. `cd typescript && npm install && npm test`).
+| Language | Verify environment | Run tests (script) | Run tests (native, from the language folder) |
+| --- | --- | --- | --- |
+| TypeScript | `./scripts/verify.sh typescript` | `./scripts/test.sh typescript` | `npm install && npm test` |
+| Go | `./scripts/verify.sh go` | `./scripts/test.sh go` | `go test -v` |
+| Python | `./scripts/verify.sh python` | `./scripts/test.sh python` | `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt && .venv/bin/pytest -v` |
+| Java | `./scripts/verify.sh java` | `./scripts/test.sh java` | `./mvnw test` (Windows: `mvnw.cmd test`) |
+| C# | `./scripts/verify.sh csharp` | `./scripts/test.sh csharp` | `dotnet test` |
+| Rust | `./scripts/verify.sh rust` | `./scripts/test.sh rust` | `cargo test -- --test-threads=1` |
+| Ruby | `./scripts/verify.sh ruby` | `./scripts/test.sh ruby` | `ruby -Ilib test/rate_limiter_test.rb` |
+| Kotlin | `./scripts/verify.sh kotlin` | `./scripts/test.sh kotlin` | `./gradlew test` (Windows: `gradlew.bat test`) |
+| All | `./scripts/verify.sh` (lists runtimes) | `./scripts/test.sh all` | |
+
+**Windows:** run the scripts from Git Bash or WSL, or use the native column.

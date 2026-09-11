@@ -1,22 +1,11 @@
 #!/usr/bin/env bash
-# Run Java tests with PATH that works in devcontainer and on macOS/Linux.
-# Called by .vscode/launch.json "Run Java tests" so Maven is found in both environments.
-
-set -e
+# Run Java tests with a PATH that works in the devcontainer and on macOS/Linux.
+# Called by .vscode/launch.json "Run Java tests". Uses the Maven wrapper, so only a JDK is required.
+set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-
-# SDKMAN: load so mvn is on PATH if installed via sdk install maven
 if [ -f "${HOME}/.sdkman/bin/sdkman-init.sh" ]; then
+  # shellcheck disable=SC1091
   source "${HOME}/.sdkman/bin/sdkman-init.sh"
 fi
-
-# Common Maven locations: Homebrew (Apple + Intel), SDKMAN, apt/devcontainer
-export PATH="/opt/homebrew/bin:/opt/homebrew/opt/maven/bin:/usr/local/bin:${HOME}/.sdkman/candidates/maven/current/bin:/usr/bin:$PATH"
-
-cd "$REPO_ROOT/java"
-if ! command -v mvn &>/dev/null; then
-  echo "Maven (mvn) not found. Install with: brew install maven"
-  echo "Or from repo root run: ./scripts/test.sh java  (uses Terminal PATH)"
-  exit 1
-fi
-mvn test
+export PATH="/opt/homebrew/bin:/usr/local/bin:${HOME}/.sdkman/candidates/java/current/bin:$PATH"
+exec "$REPO_ROOT/scripts/test.sh" java
