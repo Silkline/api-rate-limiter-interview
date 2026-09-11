@@ -1,84 +1,111 @@
 # Troubleshooting
 
-## Node not found
-
-Install Node.js 18+ from [nodejs.org](https://nodejs.org/) or use [nvm](https://github.com/nvm-sh/nvm). From the repo root, run:
+Start here: from the repo root run
 
 ```bash
-./scripts/install.sh typescript
+./scripts/verify.sh <language>
 ```
 
-## Python: use a venv
+It installs dependencies, compiles, and runs the always-passing `harness smoke` test. If it prints
+`Verify OK`, your environment works and any remaining failures are in the implementation.
+Languages: `typescript`, `go`, `python`, `java`, `csharp`, `rust`, `ruby`, `kotlin`.
 
-Create and use a virtual environment, then install dependencies:
+## "All the tests fail" right after cloning
 
-```bash
-cd python
-python3 -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-```
+Expected. The rate limiter is a stub that returns `false`, so every test except `harness smoke` fails with an
+assertion error until you implement it. A **compile error**, **"command not found"**, or a **failing smoke test**
+is a real environment problem; see the sections below.
 
-Or from the repo root, run `./scripts/install.sh python`, which creates or uses `python/.venv` for you.
+## Runtime not found (`node`, `go`, `python3`, `java`, `dotnet`, `cargo`, `ruby`)
 
-## Maven not found
+`./scripts/verify.sh` with no argument lists what is installed. Install links:
 
-Install Maven from [maven.apache.org](https://maven.apache.org/) or via [SDKMAN](https://sdkman.io/) or `brew install maven`. Ensure `mvn` is on your PATH. Then from the repo root:
+| Runtime | Install |
+| --- | --- |
+| Node.js 18+ | https://nodejs.org/ or `nvm install --lts` |
+| Go 1.22+ | https://go.dev/dl/ or `brew install go` |
+| Python 3.10+ | https://www.python.org/downloads/ or `brew install python` |
+| JDK 17+ (Java and Kotlin) | https://adoptium.net/ or `brew install openjdk@17` or `sdk install java` |
+| .NET SDK 8+ | https://dotnet.microsoft.com/download or `brew install dotnet` |
+| Rust | https://rustup.rs/ |
+| Ruby 2.6+ | preinstalled on macOS; otherwise https://www.ruby-lang.org/ or `brew install ruby` |
 
-```bash
-./scripts/install.sh java
-```
+Maven and Gradle are **not** required: `java/mvnw` and `kotlin/gradlew` download them on first use.
 
-**Run and Debug → Run Java tests** uses [scripts/run-java-tests.sh](scripts/run-java-tests.sh), which adds common Maven paths (`/opt/homebrew/bin`, SDKMAN, `/usr/bin`) so it works in the devcontainer and on macOS. If you still get "Can't find Node.js binary 'mvn'", use **Terminal → Run Task → Tests: Java** or `./scripts/test.sh java`.
+## Windows
 
-## Go / dotnet not found
+The `scripts/*.sh` files need Bash. Use **Git Bash** or **WSL**, or run the native command from the language
+folder (see the Quick reference in [INTERVIEW.md](INTERVIEW.md)). Java has `mvnw.cmd`; Kotlin has `gradlew.bat`.
+The repo's `.gitattributes` keeps shell scripts LF-terminated, so `\r: command not found` should not occur;
+if it does, run `git config core.autocrlf false` and re-clone.
 
-- **Go:** Install from [go.dev/dl](https://go.dev/dl/). Run `./scripts/install.sh go`.
-- **.NET:** Install the SDK from [dotnet.microsoft.com/download](https://dotnet.microsoft.com/download). Run `./scripts/install.sh csharp`.
+## Python
 
-## C#: "Missing framework Microsoft.NETCore.App" / Test Run Aborted
+- **`pip install` refuses to run ("externally-managed-environment")** — Python 3.12+ blocks installing outside a
+  virtual environment. `./scripts/install.sh python` creates `python/.venv` for you and `./scripts/test.sh python`
+  uses it. Manually:
 
-The C# project targets **.NET 10**. If you see "To install missing framework" or "The following frameworks were found" listing only a different version, install the **.NET 10 SDK** (or the version the project targets):
+  ```bash
+  cd python
+  python3 -m venv .venv
+  source .venv/bin/activate      # Windows: .venv\Scripts\activate
+  pip install -r requirements.txt
+  pytest -v
+  ```
 
-- **macOS (Homebrew):** `brew install dotnet` (or `dotnet@10` if available).
-- **Direct download:** [.NET downloads](https://dotnet.microsoft.com/download) — pick the SDK for the version in `csharp/ApiRateLimiter.csproj` (e.g. 10.0) and your OS/architecture.
+- **`python3 -m venv` fails on Debian/Ubuntu** — `sudo apt install python3-venv`.
 
-After installing, run **Run and Debug → Run C# tests** again, or `./scripts/test.sh csharp` from the repo root. In the devcontainer, the dotnet feature installs the matching version.
+## Java / Kotlin
 
-## "Configured debug type 'go' is not supported"
+- **`./mvnw` or `./gradlew` hangs or is slow the first time** — it downloads Maven (about 10 MB) or Gradle plus the
+  Kotlin compiler (about 200 MB). Later runs are fast.
+- **`JAVA_HOME is not set and no 'java' command could be found`** — install a JDK (see table) and open a new
+  terminal. With SDKMAN: `sdk install java 17.0.10-tem`.
+- **`Unsupported class file major version`** — the JDK is older than 17. Install 17 or newer.
 
-This appears when you use **Run and Debug** → "Run Go tests" and the [Go extension](https://marketplace.visualstudio.com/items?itemName=golang.go) is not installed. Use **Terminal → Run Task → Tests: Go** or `./scripts/test.sh go` from the repo root instead. The "Run Go tests" launch config is set to run `go test` without the Go debugger, so it should not require the extension.
+## C#
 
-## Go debug adapter: "The argument 'file' cannot be empty" / queryGOROOT
+- **"To install missing framework..." / "The framework 'Microsoft.NETCore.App', version '8.0.0' was not found"**
+  — the project targets .NET 8 but rolls forward to any newer runtime, so any SDK 8, 9 or 10 works. Install one from
+  https://dotnet.microsoft.com/download (`brew install dotnet` on macOS) and run `dotnet --list-sdks` to confirm.
+- **`dotnet test` shows no test names** — add `--logger "console;verbosity=normal"`.
 
-If you see `TypeError [ERR_INVALID_ARG_VALUE]: The argument 'file' cannot be empty` or an error in the Go extension's debug adapter when running or debugging Go tests, the extension is trying to use the Go toolchain but can't find it (e.g. Go not in PATH, or GOROOT empty). Fix it by:
+## Go
 
-1. **Using the launch config:** In **Run and Debug**, choose **"Run Go tests"** (not "Debug Go: Current Test" or a CodeLens "Debug test"). That config runs `go test` directly and does not use the Go debug adapter.
-2. **Or run tests without debugging:** **Terminal → Run Task → Tests: Go**, or from the repo root: `./scripts/test.sh go`.
-3. **If you need breakpoints in Go:** Install Go and ensure it's on your PATH (`go version` works in a terminal). Restart the editor so the Go extension can find the toolchain.
+- **`go: command not found` from VS Code Run and Debug** — `scripts/run-go-tests.sh` adds the common install
+  paths (`/usr/local/go/bin`, `/opt/homebrew/bin`). If Go is installed elsewhere, use the terminal:
+  `./scripts/test.sh go`.
+- **"Configured debug type 'go' is not supported"** — the Go extension is not installed. Use
+  **Terminal → Run Task → Tests: Go** or `./scripts/test.sh go`; neither needs the extension.
+- **Tests time out** — the scripts pass `-timeout=300s`; the suite needs about 40 seconds. If you changed
+  `WINDOW_SECONDS` to something large, raise the timeout.
 
-## Go: "command not found" when using Run and Debug
+## Rust
 
-**Run Go tests** uses [scripts/run-go-tests.sh](scripts/run-go-tests.sh), which adds common Go paths to PATH (`/usr/local/go/bin`, `/go/bin`, `/opt/homebrew/bin`) so it works in the devcontainer and on macOS/Linux. If you still see `go: command not found`:
+- **Tests interfere with each other** — the tests share one global tier map, so they must run single-threaded:
+  `cargo test -- --test-threads=1` (the scripts already do this).
 
-1. **Install Go** if you haven't: [go.dev/dl](https://go.dev/dl/) or `brew install go` (puts it in `/opt/homebrew/bin` on Apple Silicon).
-2. **Terminal → Run Task → Tests: Go** — the integrated terminal uses your shell PATH.
-3. **From a terminal:** `./scripts/test.sh go` from the repo root.
+## Ruby
 
-In the devcontainer, Go is installed by the Go feature, so **Run Go tests** should work without extra setup.
+- **`bundle install` fails with a permissions error** (macOS system Ruby) — you do not need Bundler. `minitest`
+  ships with Ruby: `ruby -Ilib test/rate_limiter_test.rb`.
+- **`cannot load such file -- minitest/autorun`** — very old Ruby without bundled minitest. `gem install minitest`
+  or install Ruby 3.x.
 
-## Tests fail after clone
+## TypeScript
 
-Dependencies are not installed by default. From the repo root, run:
+- **`vitest: command not found`** — run `npm install` in `typescript/` (or `./scripts/install.sh typescript`).
+- **Tests time out** — the timeout is derived from `WINDOW_SECONDS` in `typescript/vitest.config.ts`; a correct
+  implementation never gets near it. Check for an infinite loop.
 
-```bash
-./scripts/install.sh <language>
-```
+## VS Code
 
-Use `typescript`, `go`, `python`, `java`, or `csharp`. To install all:
+- **Tasks fail with "command not found"** — the integrated terminal inherits your shell PATH. Open a new window
+  after installing a runtime.
+- **Run and Debug configurations** call `scripts/run-<lang>-tests.sh`, which extend PATH with common install
+  locations (Homebrew, SDKMAN, `~/.cargo/bin`, `/usr/local/go/bin`) and then run `./scripts/test.sh <lang>`.
 
-```bash
-./scripts/install.sh all
-```
+## GitHub Codespaces / Dev Containers
 
-Then run tests with `./scripts/test.sh <language>` or `./scripts/test.sh all`.
+The dev container installs every runtime and runs `scripts/install.sh all`. If the post-create step reports a
+failure for a language you do not need, ignore it. To re-run: `./scripts/install.sh <language>`.

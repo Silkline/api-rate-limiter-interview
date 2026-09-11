@@ -6,7 +6,10 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "test"],
+      "runtimeArgs": [
+        "run",
+        "test"
+      ],
       "cwd": "${workspaceFolder}/typescript",
       "console": "integratedTerminal"
     },
@@ -15,7 +18,13 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "test", "--", "--inspect-brk"],
+      "runtimeArgs": [
+        "run",
+        "test",
+        "--",
+        "--inspect-brk",
+        "--no-file-parallelism"
+      ],
       "cwd": "${workspaceFolder}/typescript",
       "console": "integratedTerminal",
       "outputCapture": "std"
@@ -25,7 +34,9 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "/bin/bash",
-      "runtimeArgs": ["${workspaceFolder}/scripts/run-go-tests.sh"],
+      "runtimeArgs": [
+        "${workspaceFolder}/scripts/run-go-tests.sh"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -34,16 +45,21 @@
       "type": "debugpy",
       "request": "launch",
       "module": "pytest",
-      "args": ["-v"],
+      "args": [
+        "-v"
+      ],
       "cwd": "${workspaceFolder}/python",
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "python": "${workspaceFolder}/python/.venv/bin/python"
     },
     {
       "name": "Run Java tests",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "/bin/bash",
-      "runtimeArgs": ["${workspaceFolder}/scripts/run-java-tests.sh"],
+      "runtimeArgs": [
+        "${workspaceFolder}/scripts/run-java-tests.sh"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -52,7 +68,9 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "/bin/bash",
-      "runtimeArgs": ["${workspaceFolder}/scripts/run-csharp-tests.sh"],
+      "runtimeArgs": [
+        "${workspaceFolder}/scripts/run-csharp-tests.sh"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -61,7 +79,9 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "/bin/bash",
-      "runtimeArgs": ["${workspaceFolder}/scripts/run-rust-tests.sh"],
+      "runtimeArgs": [
+        "${workspaceFolder}/scripts/run-rust-tests.sh"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -70,7 +90,9 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "/bin/bash",
-      "runtimeArgs": ["${workspaceFolder}/scripts/run-ruby-tests.sh"],
+      "runtimeArgs": [
+        "${workspaceFolder}/scripts/run-ruby-tests.sh"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
@@ -79,7 +101,9 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "/bin/bash",
-      "runtimeArgs": ["${workspaceFolder}/scripts/run-kotlin-tests.sh"],
+      "runtimeArgs": [
+        "${workspaceFolder}/scripts/run-kotlin-tests.sh"
+      ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     }

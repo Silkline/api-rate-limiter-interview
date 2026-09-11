@@ -1,40 +1,41 @@
 # API Rate Limiter — Python
 
-Python implementation of the API rate limiter. See [SPEC.md](../SPEC.md) for the full problem and requirements.
+Problem and requirements: [SPEC.md](../SPEC.md). Interview flow: [INTERVIEW.md](../INTERVIEW.md).
 
-## Setup (VS Code / GitHub Codespaces)
+| | |
+| --- | --- |
+| **File to implement** | `rate_limiter.py` → `def rate_limiter(user_id: str) -> bool` |
+| **Constants** | same file (`FREE_LIMIT`, `PAID_LIMIT`, `WINDOW_SECONDS`) |
+| **User tier map** | `user_tiers` (module-level `dict[str, str]`, values `"free"` / `"paid"`); tests set it, you read it |
+| **Tests** | `test_rate_limiter.py` (pytest) |
+| **Requires** | Python 3.10+ (`python3 --version`) |
 
-1. Open this folder in VS Code (or open the repo in [GitHub Codespaces](https://github.com/features/codespaces)).
-2. Ensure Python 3.10+ is installed (`python3 --version`).
-3. Create a virtual environment (recommended) and install dependencies:
+## Setup
 
-   ```bash
-   cd python
-   python3 -m venv .venv
-   source .venv/bin/activate   # Windows: .venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
+```bash
+cd python
+python3 -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+Or from the repo root: `./scripts/verify.sh python` (creates `python/.venv`, installs pytest, runs the smoke test).
 
 ## Run tests
 
-From the `python` directory (with venv activated):
-
 ```bash
-pytest -vs
+pytest -v                        # full suite, about 40 seconds (paid-window tests really wait)
+pytest -v -k free_user           # only tests whose name matches
 ```
 
-For the test that sleeps for the window, default timeout is fine. To run with a longer timeout:
+Or from the repo root: `./scripts/test.sh python` (uses `python/.venv` automatically), or VS Code
+**Terminal → Run Task → Tests: Python**.
 
-```bash
-pytest -vs --timeout=15
-```
+On a fresh clone every test except `test_harness_smoke` fails: the function is a stub. That is expected.
 
-(Requires `pytest-timeout`; optional.)
+## Extra credit (clearly labelled in the test file)
 
-## User tier map
-
-Tests set a user's tier via the module-level `user_tiers` dict (e.g. `user_tiers["user1"] = "free"`). The rate limiter reads from this map to decide which limits apply.
-
-## Extra credit
-
-The test **`test_extra_credit_free_upgrades_to_paid`** is optional. It verifies that when a free user is upgraded to paid, past requests (made when free) still count toward the paid 2-per-window limit. It is clearly labeled as extra credit in the test name and comment.
+- **`test_extra_credit_free_upgrades_to_paid`** — after a free user is switched to `"paid"` in `user_tiers`, requests
+  made while free still count toward the current paid window.
+- **`test_extra_credit_constants_respected`** — the test overrides `FREE_LIMIT` at runtime, so read the module-level
+  constant on every call instead of copying it.

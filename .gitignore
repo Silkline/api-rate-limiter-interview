@@ -32,6 +32,8 @@ target/
 *.jar
 *.war
 .mvn/wrapper/maven-wrapper.jar
+# Maven wrapper (script-only type) downloads Maven here on first run
+java/.mvn/wrapper/dists/
 
 # C#
 bin/
@@ -44,7 +46,7 @@ project.lock.json
 *.pdb
 *.exe
 
-# Rust
+# Rust (Cargo.lock is committed on purpose)
 rust/target/
 
 # Ruby
@@ -56,6 +58,9 @@ vendor/bundle/
 # Kotlin / Gradle
 kotlin/build/
 kotlin/.gradle/
+kotlin/.kotlin/
+# The Gradle wrapper jar must be committed so ./gradlew works on a fresh clone.
+!kotlin/gradle/wrapper/gradle-wrapper.jar
 
 # IDE / OS
 .idea/

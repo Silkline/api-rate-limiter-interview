@@ -1,7 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <!-- Targets .NET 8 (LTS). RollForward=Major lets the tests run on any newer installed
+         runtime (9, 10, ...) so candidates do not need exactly .NET 8. -->
+    <TargetFramework>net8.0</TargetFramework>
+    <RollForward>Major</RollForward>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>ApiRateLimiter</RootNamespace>

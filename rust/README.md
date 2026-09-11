@@ -1,33 +1,36 @@
 # API Rate Limiter — Rust
 
-Rust implementation of the API rate limiter. See [SPEC.md](../SPEC.md) for the full problem and requirements.
+Problem and requirements: [SPEC.md](../SPEC.md). Interview flow: [INTERVIEW.md](../INTERVIEW.md).
 
-## Setup (VS Code / GitHub Codespaces)
+| | |
+| --- | --- |
+| **File to implement** | `src/lib.rs` → `pub fn rate_limiter(user_id: &str) -> bool` |
+| **Constants** | same file (`FREE_LIMIT`, `PAID_LIMIT`, `WINDOW_SECONDS`) |
+| **User tier map** | `user_tiers()` returns a locked `HashMap<String, String>` (values `"free"` / `"paid"`); tests set it via `with_user_tiers_mut`, you read it with `user_tiers().get(user_id)` |
+| **Tests** | `tests/rate_limiter_test.rs` (`cargo test`) |
+| **Requires** | Rust via [rustup](https://rustup.rs/) (`cargo --version`); standard library only |
 
-1. Open this folder in VS Code (or open the repo in [GitHub Codespaces](https://github.com/features/codespaces)).
-2. Ensure Rust is installed (`rustc --version`, or install from https://rustup.rs/).
-3. No external dependencies; the crate uses the standard library only.
+## Setup
+
+Nothing to install beyond Rust. Optionally, from the repo root: `./scripts/verify.sh rust`.
 
 ## Run tests
 
-From the `rust` directory:
-
 ```bash
-cargo test
+cd rust
+cargo test -- --test-threads=1                 # full suite, about 40 seconds (paid-window tests really wait)
+cargo test free_user -- --test-threads=1       # only tests whose name matches
+cargo test -- --test-threads=1 --nocapture     # show println! output
 ```
 
-With verbose output:
+`--test-threads=1` is required: the tests share one global tier map.
 
-```bash
-cargo test -- --nocapture
-```
+Or from the repo root: `./scripts/test.sh rust`, or VS Code **Terminal → Run Task → Tests: Rust**.
 
-Tests include one that sleeps for the paid window (5+ seconds); total test time is about 15–20 seconds.
+On a fresh clone every test except `harness_smoke` fails: the function is a stub. That is expected.
 
-## User tier map
+## Extra credit (clearly labelled in the test file)
 
-Tests set a user's tier via `rate_limiter::with_user_tiers_mut()` (e.g. `with_user_tiers_mut(|m| { m.insert("user1".into(), "free".into()); })`). The rate limiter reads from this map to decide which limits apply. Call `rate_limiter::reset_for_tests()` at the start of each test to clear state.
-
-## Extra credit
-
-The test **`extra_credit_free_upgrades_to_paid`** is optional. It verifies that when a free user is upgraded to paid, past requests (made when free) still count toward the paid 2-per-window limit. It is clearly labeled as extra credit in the test name and comment.
+- **`extra_credit_free_upgrades_to_paid`** — after a free user is switched to `"paid"`, requests made while free still
+  count toward the current paid window.
+- **`extra_credit_constants_respected`** — read `FREE_LIMIT` from `lib.rs`; change it and re-run to check.

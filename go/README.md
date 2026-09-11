@@ -1,31 +1,33 @@
 # API Rate Limiter — Go
 
-Go implementation of the API rate limiter. See [SPEC.md](../SPEC.md) for the full problem and requirements.
+Problem and requirements: [SPEC.md](../SPEC.md). Interview flow: [INTERVIEW.md](../INTERVIEW.md).
 
-## Setup (VS Code / GitHub Codespaces)
+| | |
+| --- | --- |
+| **File to implement** | `rate_limiter.go` → `func RateLimiter(userID string) bool` |
+| **Constants** | `constants.go` (`FREE_LIMIT`, `PAID_LIMIT`, `WINDOW_SECONDS`) |
+| **User tier map** | `UserTiers` (package-level `map[string]UserTier`, values `Free` / `Paid`); tests set it, you read it |
+| **Tests** | `rate_limiter_test.go` (`go test`) |
+| **Requires** | Go 1.22+ (`go version`); standard library only |
 
-1. Open this folder in VS Code (or open the repo in [GitHub Codespaces](https://github.com/features/codespaces)).
-2. Ensure Go 1.21+ is installed (`go version`).
-3. Dependencies are in the standard library; no `go get` required.
+## Setup
+
+Nothing to install. Optionally, from the repo root: `./scripts/verify.sh go` (vets and runs the smoke test).
 
 ## Run tests
 
-From the `go` directory:
-
 ```bash
-go test -v
+cd go
+go test -v                       # full suite, about 40 seconds (paid-window tests really wait)
+go test -v -run 'TestFreeUser'   # only tests whose name matches
 ```
 
-With timeout (for the test that sleeps for the window):
+Or from the repo root: `./scripts/test.sh go`, or VS Code **Terminal → Run Task → Tests: Go**.
 
-```bash
-go test -v -timeout=15s
-```
+On a fresh clone every test except `TestHarnessSmoke` fails: the function is a stub. That is expected.
 
-## User tier map
+## Extra credit (clearly labelled in the test file)
 
-Tests set a user's tier via the package-level `UserTiers` map (e.g. `UserTiers["user1"] = Free`). The rate limiter reads from this map to decide which limits apply.
-
-## Extra credit
-
-The test **`TestRateLimiter_ExtraCredit_FreeUpgradesToPaid`** is optional. It verifies that when a free user is upgraded to paid, past requests (made when free) still count toward the paid 2-per-window limit. It is clearly labeled as extra credit in the test name and comment.
+- **`TestExtraCredit_FreeUpgradesToPaid`** — after a free user is switched to `Paid` in `UserTiers`, requests made
+  while free still count toward the current paid window.
+- **`TestExtraCredit_ConstantsRespected`** — read `FREE_LIMIT` from `constants.go`; change it and re-run to check.

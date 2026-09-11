@@ -1,27 +1,37 @@
 # API Rate Limiter — Ruby
 
-Ruby implementation of the API rate limiter. See [SPEC.md](../SPEC.md) for the full problem and requirements.
+Problem and requirements: [SPEC.md](../SPEC.md). Interview flow: [INTERVIEW.md](../INTERVIEW.md).
 
-## Setup (VS Code / GitHub Codespaces)
+| | |
+| --- | --- |
+| **File to implement** | `lib/rate_limiter.rb` → `def rate_limiter(user_id)` |
+| **Constants** | same file (`FREE_LIMIT`, `PAID_LIMIT`, `WINDOW_SECONDS`) |
+| **User tier map** | `USER_TIERS` (top-level `Hash`, values `"free"` / `"paid"`); tests set it, you read it |
+| **Tests** | `test/rate_limiter_test.rb` (Minitest, which ships with Ruby) |
+| **Requires** | Ruby 2.6+ (`ruby --version`); no gems to install |
 
-1. Open this folder in VS Code (or open the repo in [GitHub Codespaces](https://github.com/features/codespaces)).
-2. Ensure Ruby 3.x is installed (`ruby --version`).
-3. Install dependencies: `bundle install` (from the `ruby` directory).
+## Setup
+
+Nothing to install. Optionally, from the repo root: `./scripts/verify.sh ruby`.
+
+`Gemfile` / `Gemfile.lock` are provided only for editors that expect them; Bundler is not needed
+(and `bundle install` may fail on macOS system Ruby with a permissions error; ignore it).
 
 ## Run tests
 
-From the `ruby` directory:
-
 ```bash
-bundle exec ruby -Ilib:test test/rate_limiter_test.rb
+cd ruby
+ruby -Ilib test/rate_limiter_test.rb                       # full suite, about 40 seconds (paid-window tests really wait)
+ruby -Ilib test/rate_limiter_test.rb -n /free_user/        # only tests whose name matches
 ```
 
-Tests include one that sleeps for the paid window (5+ seconds).
+Or from the repo root: `./scripts/test.sh ruby`, or VS Code **Terminal → Run Task → Tests: Ruby**.
 
-## User tier map
+On a fresh clone every test except `test_harness_smoke` fails: the function is a stub. That is expected.
 
-Tests set a user's tier via `USER_TIERS` (e.g. `USER_TIERS["user1"] = "free"`). The rate limiter reads from this map to decide which limits apply. Each test clears `USER_TIERS` in `setup`.
+## Extra credit (clearly labelled in the test file)
 
-## Extra credit
-
-The test **`test_extra_credit_free_upgrades_to_paid`** is optional. It verifies that when a free user is upgraded to paid, past requests (made when free) still count toward the paid 2-per-window limit. It is clearly labeled as extra credit in the test name and comment.
+- **`test_extra_credit_free_upgrades_to_paid`** — after a free user is switched to `"paid"` in `USER_TIERS`, requests
+  made while free still count toward the current paid window.
+- **`test_extra_credit_constants_respected`** — the test redefines `FREE_LIMIT` at runtime, so read the constant on
+  every call instead of copying it.

@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 # Run Rust tests. Called by .vscode/launch.json "Run Rust tests".
-
-set -e
+set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-
-export PATH="$HOME/.cargo/bin:/usr/local/cargo/bin:$PATH"
-
-cd "$REPO_ROOT/rust"
-cargo test -- --test-threads=1
+export PATH="$HOME/.cargo/bin:/usr/local/cargo/bin:/opt/homebrew/bin:$PATH"
+exec "$REPO_ROOT/scripts/test.sh" rust

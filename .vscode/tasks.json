@@ -4,81 +4,315 @@
     {
       "label": "Tests: TypeScript",
       "type": "shell",
-      "command": "npm test",
-      "options": { "cwd": "${workspaceFolder}/typescript", "env": {} },
-      "group": { "kind": "test", "isDefault": false },
-      "presentation": { "reveal": "always", "panel": "shared" }
+      "command": "./scripts/test.sh typescript",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Smoke: TypeScript",
+      "detail": "Install deps, compile, and run the always-passing harness smoke test (environment check).",
+      "type": "shell",
+      "command": "./scripts/verify.sh typescript",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
     },
     {
       "label": "Tests: Go",
       "type": "shell",
-      "command": "go test -v -timeout=15s",
-      "options": { "cwd": "${workspaceFolder}/go" },
-      "group": { "kind": "test", "isDefault": false },
-      "presentation": { "reveal": "always", "panel": "shared" }
+      "command": "./scripts/test.sh go",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Smoke: Go",
+      "detail": "Install deps, compile, and run the always-passing harness smoke test (environment check).",
+      "type": "shell",
+      "command": "./scripts/verify.sh go",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
     },
     {
       "label": "Tests: Python",
       "type": "shell",
-      "command": "pytest -v",
-      "options": { "cwd": "${workspaceFolder}/python" },
-      "group": { "kind": "test", "isDefault": false },
-      "presentation": { "reveal": "always", "panel": "shared" }
+      "command": "./scripts/test.sh python",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Smoke: Python",
+      "detail": "Install deps, compile, and run the always-passing harness smoke test (environment check).",
+      "type": "shell",
+      "command": "./scripts/verify.sh python",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
     },
     {
       "label": "Tests: Java",
       "type": "shell",
-      "command": "mvn test -q",
-      "options": { "cwd": "${workspaceFolder}/java" },
-      "group": { "kind": "test", "isDefault": false },
-      "presentation": { "reveal": "always", "panel": "shared" }
+      "command": "./scripts/test.sh java",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Smoke: Java",
+      "detail": "Install deps, compile, and run the always-passing harness smoke test (environment check).",
+      "type": "shell",
+      "command": "./scripts/verify.sh java",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
     },
     {
       "label": "Tests: C#",
       "type": "shell",
-      "command": "dotnet test",
-      "options": { "cwd": "${workspaceFolder}/csharp" },
-      "group": { "kind": "test", "isDefault": false },
-      "presentation": { "reveal": "always", "panel": "shared" }
+      "command": "./scripts/test.sh csharp",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Smoke: C#",
+      "detail": "Install deps, compile, and run the always-passing harness smoke test (environment check).",
+      "type": "shell",
+      "command": "./scripts/verify.sh csharp",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
     },
     {
       "label": "Tests: Rust",
       "type": "shell",
-      "command": "cargo test -- --test-threads=1",
-      "options": { "cwd": "${workspaceFolder}/rust" },
-      "group": { "kind": "test", "isDefault": false },
-      "presentation": { "reveal": "always", "panel": "shared" }
+      "command": "./scripts/test.sh rust",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Smoke: Rust",
+      "detail": "Install deps, compile, and run the always-passing harness smoke test (environment check).",
+      "type": "shell",
+      "command": "./scripts/verify.sh rust",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
     },
     {
       "label": "Tests: Ruby",
       "type": "shell",
-      "command": "bundle exec ruby -Ilib:test test/rate_limiter_test.rb",
-      "options": { "cwd": "${workspaceFolder}/ruby" },
-      "group": { "kind": "test", "isDefault": false },
-      "presentation": { "reveal": "always", "panel": "shared" }
+      "command": "./scripts/test.sh ruby",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Smoke: Ruby",
+      "detail": "Install deps, compile, and run the always-passing harness smoke test (environment check).",
+      "type": "shell",
+      "command": "./scripts/verify.sh ruby",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
     },
     {
       "label": "Tests: Kotlin",
       "type": "shell",
-      "command": "./gradlew test --no-daemon",
-      "options": { "cwd": "${workspaceFolder}/kotlin" },
-      "group": { "kind": "test", "isDefault": false },
-      "presentation": { "reveal": "always", "panel": "shared" }
+      "command": "./scripts/test.sh kotlin",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Smoke: Kotlin",
+      "detail": "Install deps, compile, and run the always-passing harness smoke test (environment check).",
+      "type": "shell",
+      "command": "./scripts/verify.sh kotlin",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
     },
     {
       "label": "Tests: All",
-      "dependsOrder": "sequence",
-      "dependsOn": [
-        "Tests: TypeScript",
-        "Tests: Go",
-        "Tests: Python",
-        "Tests: Java",
-        "Tests: C#",
-        "Tests: Rust",
-        "Tests: Ruby",
-        "Tests: Kotlin"
-      ],
-      "group": { "kind": "test", "isDefault": true },
+      "type": "shell",
+      "command": "./scripts/test.sh all",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
       "problemMatcher": []
     }
   ]
