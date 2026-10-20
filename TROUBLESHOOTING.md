@@ -22,7 +22,7 @@ is a real environment problem; see the sections below.
 
 | Runtime | Install |
 | --- | --- |
-| Node.js 18+ | https://nodejs.org/ or `nvm install --lts` |
+| Node.js 22.12+ | https://nodejs.org/ or `nvm install --lts` |
 | Go 1.22+ | https://go.dev/dl/ or `brew install go` |
 | Python 3.10+ | https://www.python.org/downloads/ or `brew install python` |
 | JDK 17+ (Java and Kotlin) | https://adoptium.net/ or `brew install openjdk@17` or `sdk install java` |

@@ -24,7 +24,7 @@ starter in a different language: a stub function to implement plus a ready-made 
 
 | Language | File to implement | Tests | Requires |
 | --- | --- | --- | --- |
-| [TypeScript](typescript/README.md) | `typescript/src/rateLimiter.ts` | `typescript/tests/rateLimiter.test.ts` | Node 18+ |
+| [TypeScript](typescript/README.md) | `typescript/src/rateLimiter.ts` | `typescript/tests/rateLimiter.test.ts` | Node 22.12+ |
 | [Go](go/README.md) | `go/rate_limiter.go` | `go/rate_limiter_test.go` | Go 1.22+ |
 | [Python](python/README.md) | `python/rate_limiter.py` | `python/test_rate_limiter.py` | Python 3.10+ |
 | [Java](java/README.md) | `java/src/main/java/com/silkline/ratelimit/RateLimiter.java` | `java/src/test/java/.../RateLimiterTest.java` | JDK 17+ (Maven is bundled) |

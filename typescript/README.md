@@ -8,7 +8,7 @@ Problem and requirements: [SPEC.md](../SPEC.md). Interview flow: [INTERVIEW.md](
 | **Constants** | `src/constants.ts` (`FREE_LIMIT`, `PAID_LIMIT`, `WINDOW_SECONDS`) |
 | **User tier map** | `userTiers` (exported `Map<string, 'free' \| 'paid'>` in `src/rateLimiter.ts`); tests set it, you read it |
 | **Tests** | `tests/rateLimiter.test.ts` (Vitest) |
-| **Requires** | Node.js 18+ (`node -v`) |
+| **Requires** | Node.js 22.12+ (`node -v`) |
 
 ## Setup
 
