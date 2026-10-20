@@ -26,7 +26,7 @@ need() {
 }
 
 install_typescript() {
-  need node "Node.js (18+)" "https://nodejs.org/" || return 1
+  need node "Node.js (22.12+)" "https://nodejs.org/" || return 1
   echo "Installing TypeScript dependencies (npm install)..."
   (cd typescript && npm install)
 }

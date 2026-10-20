@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitest/config';
-import { WINDOW_SECONDS } from './src/constants';
+import { WINDOW_SECONDS } from './src/constants.ts';
 
 // The longest test waits for the paid window twice. Derive the timeout from the
 // constant so changing WINDOW_SECONDS never causes spurious timeouts.
