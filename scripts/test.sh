@@ -41,7 +41,7 @@ run_go() {
   if smoke; then
     (cd go && go test -v -run 'TestHarnessSmoke' ./...)
   else
-    (cd go && go test -v -timeout=300s ./...)
+    (cd go && go test -v -timeout=0 ./...)
   fi
 }
 

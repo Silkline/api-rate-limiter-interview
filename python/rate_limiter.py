@@ -1,5 +1,5 @@
 """
-API rate limiter: free = 5 requests ever, paid = 2 per 5s window.
+API rate limiter: free = 5 requests ever, paid = at most 2 in any 5-second span.
 """
 
 # Constants (used by implementation and tests)
@@ -14,7 +14,7 @@ user_tiers: dict[str, str] = {}
 def rate_limiter(user_id: str) -> bool:
     """
     Returns True if the request is allowed, False if rate limited.
-    TODO: Implement per SPEC — free = lifetime cap of FREE_LIMIT, paid = PAID_LIMIT per WINDOW_SECONDS window.
+    TODO: Implement per SPEC — free = lifetime cap of FREE_LIMIT, paid = at most PAID_LIMIT in any WINDOW_SECONDS-second span.
     """
     # Stub: replace with your implementation
     return False

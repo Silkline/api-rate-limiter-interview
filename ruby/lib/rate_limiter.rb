@@ -3,7 +3,7 @@
 # API rate limiter.
 #
 # - Free users: FREE_LIMIT requests total, ever (lifetime cap; never resets).
-# - Paid users: PAID_LIMIT requests per WINDOW_SECONDS-second window; the window resets.
+# - Paid users: at most PAID_LIMIT requests in any WINDOW_SECONDS-second span.
 #
 # Implement `rate_limiter` below. Everything else in this file is scaffolding used by the tests.
 
@@ -20,7 +20,7 @@ USER_TIERS = {}
 # TODO: implement per SPEC.md.
 #   - Look up the user's tier in USER_TIERS.
 #   - "free": allow the first FREE_LIMIT requests ever, then always deny.
-#   - "paid": allow at most PAID_LIMIT requests per WINDOW_SECONDS-second window.
+#   - "paid": allow at most PAID_LIMIT requests in any WINDOW_SECONDS-second span.
 # Keep per-user state in memory (e.g. top-level Hash constants).
 # Read FREE_LIMIT / PAID_LIMIT / WINDOW_SECONDS at call time so the tests can change them.
 def rate_limiter(user_id)

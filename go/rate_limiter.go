@@ -16,7 +16,7 @@ var UserTiers = make(map[string]UserTier)
 // TODO: implement per SPEC.md.
 //   - Look up the user's tier in UserTiers.
 //   - Free: allow the first FREE_LIMIT requests ever, then always deny.
-//   - Paid: allow at most PAID_LIMIT requests per WINDOW_SECONDS-second window.
+//   - Paid: allow at most PAID_LIMIT requests in any WINDOW_SECONDS-second span.
 //
 // Keep per-user state in memory (e.g. package-level maps).
 func RateLimiter(userID string) bool {

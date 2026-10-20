@@ -5,7 +5,7 @@
  * those constants in src/constants.ts changes what the tests expect.
  *
  * Tests that wait for the paid window sleep for real, so the full suite takes roughly
- * 6 * (WINDOW_SECONDS + 1) seconds (about 36s with the defaults).
+ * 7 * (WINDOW_SECONDS + 1) seconds (about 42s with the defaults).
  */
 import { beforeEach, describe, expect, it } from 'vitest';
 import { rateLimiter, userTiers } from '../src/rateLimiter';
@@ -13,6 +13,8 @@ import { FREE_LIMIT, PAID_LIMIT, WINDOW_SECONDS } from '../src/constants';
 
 /** Wait a little longer than the window so we are safely on the other side of it. */
 const WAIT_MS = (WINDOW_SECONDS + 1) * 1000;
+/** Half a window: long enough to catch a window that is too short (e.g. ms vs s), short enough to still be inside it. */
+const HALF_WINDOW_MS = (WINDOW_SECONDS * 1000) / 2;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 function expectAllowed(user: string, count: number, label: string) {
@@ -75,7 +77,10 @@ describe('paid user', () => {
     expectAllowed(user, PAID_LIMIT, 'window 1');
     expect(rateLimiter(user)).toBe(false);
 
-    await sleep(WAIT_MS);
+    await sleep(HALF_WINDOW_MS);
+    expect(rateLimiter(user), 'still inside the window: must remain denied (is the window measured in the right unit?)').toBe(false);
+
+    await sleep(WAIT_MS - HALF_WINDOW_MS);
 
     expectAllowed(user, PAID_LIMIT, 'after window');
     expect(rateLimiter(user)).toBe(false);
@@ -100,6 +105,27 @@ describe('paid user', () => {
       expect(rateLimiter(user), `window ${w}: request beyond PAID_LIMIT should be denied`).toBe(false);
       if (w < 3) await sleep(WAIT_MS);
     }
+  });
+
+  /**
+   * The limit applies to every WINDOW_SECONDS-long span, not just windows that start at the
+   * user's first request. Requests land at t=0, t=W/2 and t=5W/4; the span from W/2 to 3W/2
+   * must still hold at most PAID_LIMIT allowed requests. A fixed window that resets at t=W
+   * lets PAID_LIMIT more through at t=5W/4 and fails here.
+   */
+  it('allows at most PAID_LIMIT requests in any WINDOW_SECONDS span', async () => {
+    const user = 'paid-any-window';
+    userTiers.set(user, 'paid');
+    const quarterMs = (WINDOW_SECONDS * 1000) / 4;
+
+    expectAllowed(user, 1, 't=0');
+    await sleep(2 * quarterMs);
+
+    expectAllowed(user, PAID_LIMIT - 1, 't=W/2');
+    await sleep(3 * quarterMs);
+
+    expectAllowed(user, 1, 't=5W/4: the t=0 request has expired');
+    expect(rateLimiter(user), 't=5W/4: the t=W/2 requests are still within the last WINDOW_SECONDS').toBe(false);
   });
 });
 

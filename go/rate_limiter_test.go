@@ -4,7 +4,7 @@
 // those constants in constants.go changes what the tests expect.
 //
 // Tests that wait for the paid window sleep for real, so the full suite takes roughly
-// 6 * (WINDOW_SECONDS + 1) seconds (about 36s with the defaults).
+// 7 * (WINDOW_SECONDS + 1) seconds (about 42s with the defaults).
 package ratelimit
 
 import (
@@ -15,6 +15,10 @@ import (
 
 // wait is a little longer than the window so we are safely on the other side of it.
 const wait = time.Duration(WINDOW_SECONDS+1) * time.Second
+
+// halfWindow is long enough to catch a window that is too short (e.g. ms vs s), short enough
+// to still be inside it.
+const halfWindow = time.Duration(WINDOW_SECONDS) * time.Second / 2
 
 func clearUserTiers() {
 	UserTiers = make(map[string]UserTier)
@@ -90,7 +94,10 @@ func TestPaidUser_AllowsAgainAfterWindow(t *testing.T) {
 	expectAllowed(t, user, PAID_LIMIT, "window 1")
 	expectDenied(t, user, "window 1: beyond PAID_LIMIT")
 
-	time.Sleep(wait)
+	time.Sleep(halfWindow)
+	expectDenied(t, user, "still inside the window: must remain denied (is the window measured in the right unit?)")
+
+	time.Sleep(wait - halfWindow)
 
 	expectAllowed(t, user, PAID_LIMIT, "after window")
 	expectDenied(t, user, "after window: beyond PAID_LIMIT")
@@ -119,6 +126,26 @@ func TestPaidUser_TwoFullWindows(t *testing.T) {
 			time.Sleep(wait)
 		}
 	}
+}
+
+// The limit applies to every WINDOW_SECONDS-long span, not just windows that start at the
+// user's first request. Requests land at t=0, t=W/2 and t=5W/4; the span from W/2 to 3W/2
+// must still hold at most PAID_LIMIT allowed requests. A fixed window that resets at t=W
+// lets PAID_LIMIT more through at t=5W/4 and fails here.
+func TestPaidUser_AtMostPaidLimitInAnyWindow(t *testing.T) {
+	clearUserTiers()
+	user := "paid-any-window"
+	UserTiers[user] = Paid
+	quarter := time.Duration(WINDOW_SECONDS) * time.Second / 4
+
+	expectAllowed(t, user, 1, "t=0")
+	time.Sleep(2 * quarter)
+
+	expectAllowed(t, user, PAID_LIMIT-1, "t=W/2")
+	time.Sleep(3 * quarter)
+
+	expectAllowed(t, user, 1, "t=5W/4: the t=0 request has expired")
+	expectDenied(t, user, "t=5W/4: the t=W/2 requests are still within the last WINDOW_SECONDS")
 }
 
 func TestIsolation_BetweenFreeUsers(t *testing.T) {

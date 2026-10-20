@@ -77,8 +77,9 @@ if it does, run `git config core.autocrlf false` and re-clone.
   `./scripts/test.sh go`.
 - **"Configured debug type 'go' is not supported"** — the Go extension is not installed. Use
   **Terminal → Run Task → Tests: Go** or `./scripts/test.sh go`; neither needs the extension.
-- **Tests time out** — the scripts pass `-timeout=300s`; the suite needs about 40 seconds. If you changed
-  `WINDOW_SECONDS` to something large, raise the timeout.
+- **Tests time out** — the scripts pass `-timeout=0` (no limit), so a larger `WINDOW_SECONDS` never trips it.
+  Plain `go test` keeps Go's default 10-minute limit, which covers `WINDOW_SECONDS` up to about 80; above that,
+  add `-timeout=0`.
 
 ## Rust
 

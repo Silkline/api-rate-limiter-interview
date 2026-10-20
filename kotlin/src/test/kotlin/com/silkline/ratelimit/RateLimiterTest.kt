@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
  * those constants in Constants.kt changes what the tests expect.
  *
  * Tests that wait for the paid window sleep for real, so the full suite takes roughly
- * 6 * (WINDOW_SECONDS + 1) seconds (about 36s with the defaults).
+ * 7 * (WINDOW_SECONDS + 1) seconds (about 42s with the defaults).
  */
 class RateLimiterTest {
 
@@ -28,6 +28,9 @@ class RateLimiterTest {
     private val waitSeconds = WINDOW_SECONDS + 1L
 
     private fun waitForWindow() = TimeUnit.SECONDS.sleep(waitSeconds)
+
+    /** Half a window: long enough to catch a window that is too short (e.g. ms vs s), short enough to still be inside it. */
+    private val halfWindowMs = WINDOW_SECONDS * 1000L / 2
 
     private fun expectAllowed(user: String, count: Int, label: String) {
         repeat(count) { i ->
@@ -95,7 +98,10 @@ class RateLimiterTest {
         expectAllowed(user, PAID_LIMIT, "window 1")
         expectDenied(user, "window 1: beyond PAID_LIMIT")
 
-        waitForWindow()
+        TimeUnit.MILLISECONDS.sleep(halfWindowMs)
+        expectDenied(user, "still inside the window: must remain denied (is the window measured in the right unit?)")
+
+        TimeUnit.MILLISECONDS.sleep(waitSeconds * 1000L - halfWindowMs)
 
         expectAllowed(user, PAID_LIMIT, "after window")
         expectDenied(user, "after window: beyond PAID_LIMIT")
@@ -122,6 +128,28 @@ class RateLimiterTest {
             expectDenied(user, "window $w: beyond PAID_LIMIT")
             if (w < 3) waitForWindow()
         }
+    }
+
+    /**
+     * The limit applies to every WINDOW_SECONDS-long span, not just windows that start at the
+     * user's first request. Requests land at t=0, t=W/2 and t=5W/4; the span from W/2 to 3W/2
+     * must still hold at most PAID_LIMIT allowed requests. A fixed window that resets at t=W
+     * lets PAID_LIMIT more through at t=5W/4 and fails here.
+     */
+    @Test
+    fun paidUser_atMostPaidLimitInAnyWindow() {
+        val user = "paid-any-window"
+        userTiers[user] = UserTier.PAID
+        val quarterMs = WINDOW_SECONDS * 1000L / 4
+
+        expectAllowed(user, 1, "t=0")
+        TimeUnit.MILLISECONDS.sleep(2 * quarterMs)
+
+        expectAllowed(user, PAID_LIMIT - 1, "t=W/2")
+        TimeUnit.MILLISECONDS.sleep(3 * quarterMs)
+
+        expectAllowed(user, 1, "t=5W/4: the t=0 request has expired")
+        expectDenied(user, "t=5W/4: the t=W/2 requests are still within the last WINDOW_SECONDS")
     }
 
     @Test
