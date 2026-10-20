@@ -47,6 +47,8 @@ install_python() {
       return 1
     fi
   fi
+  # The pip bundled with older Pythons has known advisories (CVE-2026-8643, CVE-2026-13346).
+  python/.venv/bin/python -m pip install -q --upgrade "pip>=26.2"
   python/.venv/bin/pip install -q -r python/requirements.txt
 }
 
