@@ -1,1 +1,2 @@
-pytest>=7.0
+pytest>=9.0.3
+pygments>=2.20.0   # transitive via pytest; floor clears CVE-2026-4539
