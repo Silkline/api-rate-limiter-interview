@@ -22,7 +22,7 @@ public static class RateLimiter
     /// TODO: implement per SPEC.md.
     ///   - Look up the user's tier in <see cref="UserTiers"/>.
     ///   - Free: allow the first FreeLimit requests ever, then always deny.
-    ///   - Paid: allow at most PaidLimit requests per WindowSeconds-second window.
+    ///   - Paid: allow at most PaidLimit requests in any WindowSeconds-second span.
     /// Keep per-user state in memory (e.g. static dictionaries in this class).
     /// </summary>
     public static bool AllowRequest(string userId)

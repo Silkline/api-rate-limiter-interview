@@ -20,7 +20,7 @@ object RateLimiter {
      * TODO: implement per SPEC.md.
      *   - Look up the user's tier in [userTiers].
      *   - FREE: allow the first FREE_LIMIT requests ever, then always deny.
-     *   - PAID: allow at most PAID_LIMIT requests per WINDOW_SECONDS-second window.
+     *   - PAID: allow at most PAID_LIMIT requests in any WINDOW_SECONDS-second span.
      * Keep per-user state in memory (e.g. maps in this object).
      */
     @Suppress("UNUSED_PARAMETER")

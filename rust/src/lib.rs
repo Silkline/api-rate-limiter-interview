@@ -44,7 +44,7 @@ pub fn reset_for_tests() {
 /// TODO: implement per SPEC.md.
 ///   - Look up the user's tier with `user_tiers().get(user_id)`.
 ///   - "free": allow the first FREE_LIMIT requests ever, then always deny.
-///   - "paid": allow at most PAID_LIMIT requests per WINDOW_SECONDS-second window.
+///   - "paid": allow at most PAID_LIMIT requests in any WINDOW_SECONDS-second span.
 /// Keep per-user state in memory (e.g. another `static OnceLock<Mutex<HashMap<..>>>`).
 pub fn rate_limiter(user_id: &str) -> bool {
     // Stub: replace with your implementation.

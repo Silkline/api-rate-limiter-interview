@@ -6,7 +6,7 @@
 # those constants in lib/rate_limiter.rb changes what the tests expect.
 #
 # Tests that wait for the paid window sleep for real, so the full suite takes roughly
-# 6 * (WINDOW_SECONDS + 1) seconds (about 36s with the defaults).
+# 7 * (WINDOW_SECONDS + 1) seconds (about 42s with the defaults).
 #
 # Run:  ruby -Ilib test/rate_limiter_test.rb          (minitest ships with Ruby)
 
@@ -16,6 +16,9 @@ require_relative "../lib/rate_limiter"
 class RateLimiterTest < Minitest::Test
   # Wait a little longer than the window so we are safely on the other side of it.
   WAIT = WINDOW_SECONDS + 1
+  # Half a window: long enough to catch a window that is too short (e.g. ms vs s), short enough
+  # to still be inside it.
+  HALF_WINDOW = WINDOW_SECONDS / 2.0
 
   def setup
     USER_TIERS.clear
@@ -77,7 +80,10 @@ class RateLimiterTest < Minitest::Test
     expect_allowed(user, PAID_LIMIT, "window 1")
     expect_denied(user, "window 1: beyond PAID_LIMIT")
 
-    sleep WAIT
+    sleep HALF_WINDOW
+    expect_denied(user, "still inside the window: must remain denied (is the window measured in the right unit?)")
+
+    sleep WAIT - HALF_WINDOW
 
     expect_allowed(user, PAID_LIMIT, "after window")
     expect_denied(user, "after window: beyond PAID_LIMIT")
@@ -102,6 +108,25 @@ class RateLimiterTest < Minitest::Test
       expect_denied(user, "window #{w}: beyond PAID_LIMIT")
       sleep WAIT if w < 3
     end
+  end
+
+  # The limit applies to every WINDOW_SECONDS-long span, not just windows that start at the
+  # user's first request. Requests land at t=0, t=W/2 and t=5W/4; the span from W/2 to 3W/2
+  # must still hold at most PAID_LIMIT allowed requests. A fixed window that resets at t=W
+  # lets PAID_LIMIT more through at t=5W/4 and fails here.
+  def test_paid_at_most_limit_in_any_window
+    user = "paid-any-window"
+    USER_TIERS[user] = "paid"
+    quarter = WINDOW_SECONDS / 4.0
+
+    expect_allowed(user, 1, "t=0")
+    sleep 2 * quarter
+
+    expect_allowed(user, PAID_LIMIT - 1, "t=W/2")
+    sleep 3 * quarter
+
+    expect_allowed(user, 1, "t=5W/4: the t=0 request has expired")
+    expect_denied(user, "t=5W/4: the t=W/2 requests are still within the last WINDOW_SECONDS")
   end
 
   def test_isolation_between_free_users

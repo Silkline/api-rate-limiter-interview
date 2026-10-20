@@ -5,7 +5,7 @@ All expectations are derived from FREE_LIMIT / PAID_LIMIT / WINDOW_SECONDS, so c
 those constants in rate_limiter.py changes what the tests expect.
 
 Tests that wait for the paid window sleep for real, so the full suite takes roughly
-6 * (WINDOW_SECONDS + 1) seconds (about 36s with the defaults).
+7 * (WINDOW_SECONDS + 1) seconds (about 42s with the defaults).
 """
 
 import time
@@ -23,6 +23,9 @@ from rate_limiter import (
 
 # Wait a little longer than the window so we are safely on the other side of it.
 WAIT = WINDOW_SECONDS + 1
+# Half a window: long enough to catch a window that is too short (e.g. ms vs s), short enough
+# to still be inside it.
+HALF_WINDOW = WINDOW_SECONDS / 2
 
 
 @pytest.fixture(autouse=True)
@@ -84,7 +87,10 @@ def test_paid_user_allows_again_after_window():
         assert rate_limiter(user) is True
     assert rate_limiter(user) is False
 
-    time.sleep(WAIT)
+    time.sleep(HALF_WINDOW)
+    assert rate_limiter(user) is False, "still inside the window: must remain denied (is the window measured in the right unit?)"
+
+    time.sleep(WAIT - HALF_WINDOW)
 
     for i in range(PAID_LIMIT):
         assert rate_limiter(user) is True, f"after the window, request {i + 1} should be allowed"
@@ -112,6 +118,26 @@ def test_paid_two_full_windows():
         assert rate_limiter(user) is False, f"window {window + 1}: request beyond PAID_LIMIT should be denied"
         if window < 2:
             time.sleep(WAIT)
+
+
+def test_paid_at_most_limit_in_any_window():
+    # The limit applies to every WINDOW_SECONDS-long span, not just windows that start at the
+    # user's first request. Requests land at t=0, t=W/2 and t=5W/4; the span from W/2 to 3W/2
+    # must still hold at most PAID_LIMIT allowed requests. A fixed window that resets at t=W
+    # lets PAID_LIMIT more through at t=5W/4 and fails here.
+    user = "paid-any-window"
+    user_tiers[user] = "paid"
+    quarter = WINDOW_SECONDS / 4
+
+    assert rate_limiter(user) is True, "t=0: first request should be allowed"
+    time.sleep(2 * quarter)
+
+    for i in range(PAID_LIMIT - 1):
+        assert rate_limiter(user) is True, f"t=W/2: request {i + 1} of {PAID_LIMIT - 1} should be allowed"
+    time.sleep(3 * quarter)
+
+    assert rate_limiter(user) is True, "t=5W/4: the t=0 request has expired, so one more should be allowed"
+    assert rate_limiter(user) is False, "t=5W/4: the t=W/2 requests are still within the last WINDOW_SECONDS"
 
 
 # --- Core: isolation between users -------------------------------------------------------

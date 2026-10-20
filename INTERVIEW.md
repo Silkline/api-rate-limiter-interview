@@ -41,7 +41,7 @@ Use this with candidates for the API rate limiter exercise.
 3. **Check your environment:** `./scripts/verify.sh <language>` (or open the repo in GitHub Codespaces, where
    everything is pre-installed).
 4. **Implement** `rateLimiter` so the core tests pass: free users get `FREE_LIMIT` requests ever; paid users get
-   `PAID_LIMIT` per `WINDOW_SECONDS`-second window. Read the constants at call time rather than copying them.
+   at most `PAID_LIMIT` in any `WINDOW_SECONDS`-second span. Read the constants at call time rather than copying them.
 5. **Run the tests often:** `./scripts/test.sh <language>`, or the native command below, or the VS Code task
    **Tests: \<Language\>**.
 6. **Extra credit** if time allows: the free→paid upgrade test and the constants test, both clearly labelled.
